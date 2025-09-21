@@ -4,14 +4,14 @@ public class ArraysCC{
     public static int Trappedrainwater(int height[]){
         int n = height.length;
 
-        //Calculate Left Max Boundary --> This is an Auxillary Array.
+        //Calculate Left Max Boundary --> This is an Auxiliary Array.
         int leftMax[] = new int[n];
         leftMax[0] = height[0]; //Because at the beggining the first bar will have the Max height.
         for(int i=1; i<n; i++){
             leftMax[i] = Math.max(height[i], leftMax[i-1]);
         }
 
-        //Calculate Right Max Boundary --> Auxillary Array
+        //Calculate Right Max Boundary --> Auxiliary Array
         int rightMax[] = new int [n];
         rightMax[n-1] = height[n-1]; //Because at the end the last Bar will have the Max height.
         for(int i=n-2; i>=0; i--){
