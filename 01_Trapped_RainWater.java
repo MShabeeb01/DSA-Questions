@@ -8,14 +8,14 @@ public class ArraysCC{
         int leftMax[] = new int[n];
         leftMax[0] = height[0]; //Because at the beggining the first bar will have the Max height.
         for(int i=1; i<n; i++){
-            leftMax[i] = Math.max(height[i], leftMax[i-1]);
+            leftMax[i] = Math.max(height[i], leftMax[i-1]); // Compares the current height and the previous height as it moves from low to high.
         }
 
         //Calculate Right Max Boundary --> Auxiliary Array
         int rightMax[] = new int [n];
         rightMax[n-1] = height[n-1]; //Because at the end the last Bar will have the Max height.
         for(int i=n-2; i>=0; i--){
-            rightMax[i] = Math.max(height[i],rightMax[i+1]);
+            rightMax[i] = Math.max(height[i],rightMax[i+1]); // Compares the current height and the height of right bar as it moves from high to low.
         }
 
         int trappedWater = 0;
