@@ -1,58 +1,67 @@
 import java.util.*;
 
-public class ArraysCC{
-    public static int Trappedrainwater(int height[]){
+public class ArraysCC {
+
+    // Function to calculate trapped rainwater
+    public static int TrappedRainwater(int height[]) {
+
         int n = height.length;
 
-        //Calculate Left Max Boundary --> This is an Auxiliary Array.
+        // ---------- Left Max Array ----------
         int leftMax[] = new int[n];
-        leftMax[0] = height[0]; //Because at the beggining the first bar will have the Max height.
-        for(int i=1; i<n; i++){
-            leftMax[i] = Math.max(height[i], leftMax[i-1]); // Compares the current height and the previous height as it moves from low to high.
+        leftMax[0] = height[0];
+
+        for (int i = 1; i < n; i++) {
+            leftMax[i] = Math.max(height[i], leftMax[i - 1]);
         }
 
-        //Calculate Right Max Boundary --> Auxiliary Array
-        int rightMax[] = new int [n];
-        rightMax[n-1] = height[n-1]; //Because at the end the last Bar will have the Max height.
-        for(int i=n-2; i>=0; i--){
-            rightMax[i] = Math.max(height[i],rightMax[i+1]); // Compares the current height and the height of right bar as it moves from high to low.
+        // ---------- Right Max Array ----------
+        int rightMax[] = new int[n];
+        rightMax[n - 1] = height[n - 1];
+
+        for (int i = n - 2; i >= 0; i--) {
+            rightMax[i] = Math.max(height[i], rightMax[i + 1]);
         }
 
+        // ---------- Calculate Trapped Water ----------
         int trappedWater = 0;
-        //Loop
-        for(int i=0; i<n; i++){
-            //Water level = min(leftMax , rightMax)
-            int waterLevel = Math.min(leftMax[i],rightMax[i]);
 
-            //Trapped water = waterlevel - height[i]
+        for (int i = 0; i < n; i++) {
+            int waterLevel = Math.min(leftMax[i], rightMax[i]);
             trappedWater += waterLevel - height[i];
         }
 
         return trappedWater;
     }
-    
-    public static void main(String args[]){
-        int height[] = {4,2,0,6,3,2,5};
-        System.out.println("The Area of Trapped Rainwater is: " + Trappedrainwater(height));
+
+    public static void main(String args[]) {
+
+        int height[] = {4, 2, 0, 6, 3, 2, 5};
+
+        System.out.println("The Area of Trapped Rainwater is: "
+                + TrappedRainwater(height));
     }
-
 }
-// ===================== SUMMARY =====================
-// 1. Create leftMax[]:
-//    - Store the tallest bar from LEFT up to each index.
 
-// 2. Create rightMax[]:
-//    - Store the tallest bar from RIGHT up to each index.
+/*
+--------------- QUICK RECALL ---------------
 
-// 3. For every index:
-//    - Water Level = min(leftMax[i], rightMax[i])
+1. Create leftMax[]
+   -> Highest bar from LEFT.
 
-// 4. Water trapped at each index:
-//    - Water = Water Level - height[i]
+2. Create rightMax[]
+   -> Highest bar from RIGHT.
 
-// 5. Add the trapped water of all indices
-//    - Total = Sum of (Water Level - Current Height)
+3. Water Level
+   -> min(leftMax, rightMax)
 
-// Time Complexity  : O(n)
-// Space Complexity : O(n)  // Two auxiliary arrays (leftMax & rightMax)
-// ===================================================
+4. Trapped Water
+   -> Water Level - Current Height
+
+5. Add all trapped water.
+
+Time Complexity  : O(n)
+Space Complexity : O(n)
+
+--------------------------------------------
+*/
