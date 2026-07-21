@@ -37,4 +37,22 @@ public class ArraysCC{
     }
 
 }
-// The Time Complexity will be O(n).
+// ===================== SUMMARY =====================
+// 1. Create leftMax[]:
+//    - Store the tallest bar from LEFT up to each index.
+
+// 2. Create rightMax[]:
+//    - Store the tallest bar from RIGHT up to each index.
+
+// 3. For every index:
+//    - Water Level = min(leftMax[i], rightMax[i])
+
+// 4. Water trapped at each index:
+//    - Water = Water Level - height[i]
+
+// 5. Add the trapped water of all indices
+//    - Total = Sum of (Water Level - Current Height)
+
+// Time Complexity  : O(n)
+// Space Complexity : O(n)  // Two auxiliary arrays (leftMax & rightMax)
+// ===================================================
