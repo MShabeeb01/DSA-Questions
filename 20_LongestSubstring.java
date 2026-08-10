@@ -1,33 +1,24 @@
-import java.util.*;
-
 class Solution {
     public int lengthOfLongestSubstring(String s) {
 
-        // Set stores the characters currently inside the window
-        Set<Character> charSet = new HashSet<>();
+        // Stores the last position of each character
+        int charIndex[] = new int[128];
 
-        // Stores the maximum length found so far
         int maxLength = 0;
-
-        // Left pointer of the sliding window
         int left = 0;
 
         // Right pointer moves through the string
         for (int right = 0; right < s.length(); right++) {
 
-            // If the current character already exists,
-            // remove characters from the left until
-            // the duplicate character is removed.
-            while (charSet.contains(s.charAt(right))) {
+            char ch = s.charAt(right);
 
-                charSet.remove(s.charAt(left));
-                left++;
-            }
+            // Move left if the character was already seen
+            left = Math.max(left, charIndex[ch]);
 
-            // Add the current character to the set
-            charSet.add(s.charAt(right));
+            // Store current index + 1
+            charIndex[ch] = right + 1;
 
-            // Calculate the current window length
+            // Calculate current window length
             maxLength = Math.max(maxLength, right - left + 1);
         }
 
@@ -39,16 +30,48 @@ class Solution {
 
 ## Code Summary
 
-1. Use a HashSet to store unique characters.
-2. Use two pointers: left and right.
-3. The right pointer moves through the string.
-4. If the current character is already in the Set,
-   move the left pointer forward.
-5. Remove characters from the Set while moving left.
-6. Add the current character to the Set.
+1. Create an array charIndex[] of size 128.
+2. The array stores the last position of each character.
+3. Use two pointers: left and right.
+4. Move right through the string.
+5. If the current character was already seen,
+   move left to the position after its previous occurrence.
+6. Update the character's position.
 7. Calculate the current window length.
-8. Keep updating the maximum length.
+8. Keep the maximum length.
 9. Return maxLength.
+
+---
+
+## Important Concept
+
+We store:
+
+charIndex[ch] = right + 1;
+
+instead of:
+
+charIndex[ch] = right;
+
+Therefore:
+
+0 means the character has never appeared.
+
+Example:
+
+String = "abc"
+
+'a' at index 0
+
+charIndex['a'] = 0 + 1 = 1
+
+So when 'a' appears again:
+
+left = Math.max(left, charIndex['a']);
+
+left becomes 1.
+
+This automatically moves left after the previous 'a'.
 
 ---
 
@@ -56,31 +79,43 @@ class Solution {
 
 String:
 
-"pwwkew"
+"abcabcbb"
 
 Index:
 
- 0  1  2  3  4  5
- p  w  w  k  e  w
+ 0  1  2  3  4  5  6  7
+ a  b  c  a  b  c  b  b
+
+Initially:
+
+left = 0
+maxLength = 0
+
+All charIndex[] values = 0
 
 ---
 
 ## Iteration 1
 
 right = 0
+ch = 'a'
+
+charIndex['a'] = 0
+
+left = Math.max(0, 0)
 left = 0
 
-Current character = 'p'
+Update:
 
-Set does not contain 'p'.
+charIndex['a'] = 1
 
-Add 'p'.
+Window:
 
-Set = {p}
+"a"
 
-Window = "p"
+Length:
 
-Length = 0 - 0 + 1 = 1
+0 - 0 + 1 = 1
 
 maxLength = 1
 
@@ -89,19 +124,24 @@ maxLength = 1
 ## Iteration 2
 
 right = 1
+ch = 'b'
+
+charIndex['b'] = 0
+
+left = Math.max(0, 0)
 left = 0
 
-Current character = 'w'
+Update:
 
-'w' is not in the Set.
+charIndex['b'] = 2
 
-Add 'w'.
+Window:
 
-Set = {p, w}
+"ab"
 
-Window = "pw"
+Length:
 
-Length = 1 - 0 + 1 = 2
+1 - 0 + 1 = 2
 
 maxLength = 2
 
@@ -110,81 +150,76 @@ maxLength = 2
 ## Iteration 3
 
 right = 2
+ch = 'c'
+
+charIndex['c'] = 0
+
+left = Math.max(0, 0)
 left = 0
 
-Current character = 'w'
+Update:
 
-'w' is already in the Set.
+charIndex['c'] = 3
 
-Remove s[left]:
+Window:
 
-s[0] = 'p'
+"abc"
 
-Set = {w}
+Length:
 
-left = 1
+2 - 0 + 1 = 3
 
-'w' is still in the Set.
-
-Remove s[left]:
-
-s[1] = 'w'
-
-Set = {}
-
-left = 2
-
-Now 'w' is not in the Set.
-
-Add 'w'.
-
-Set = {w}
-
-Window = "w"
-
-Length = 2 - 2 + 1 = 1
-
-maxLength = 2
+maxLength = 3
 
 ---
 
 ## Iteration 4
 
 right = 3
-left = 2
+ch = 'a'
 
-Current character = 'k'
+charIndex['a'] = 1
 
-'k' is not in the Set.
+left = Math.max(0, 1)
+left = 1
 
-Add 'k'.
+Update:
 
-Set = {w, k}
+charIndex['a'] = 4
 
-Window = "wk"
+Window:
 
-Length = 3 - 2 + 1 = 2
+"bca"
 
-maxLength = 2
+Length:
+
+3 - 1 + 1 = 3
+
+maxLength = 3
 
 ---
 
 ## Iteration 5
 
 right = 4
+ch = 'b'
+
+charIndex['b'] = 2
+
+left = Math.max(1, 2)
 left = 2
 
-Current character = 'e'
+Update:
 
-'e' is not in the Set.
+charIndex['b'] = 5
 
-Add 'e'.
+Window:
 
-Set = {w, k, e}
+"cab"
 
-Window = "wke"
+Length:
 
-Length = 4 - 2 + 1 = 3
+4 - 2 + 1 = 3
 
 maxLength = 3
 
@@ -193,27 +228,76 @@ maxLength = 3
 ## Iteration 6
 
 right = 5
-left = 2
+ch = 'c'
 
-Current character = 'w'
+charIndex['c'] = 3
 
-'w' is already in the Set.
-
-Remove s[left]:
-
-s[2] = 'w'
-
-Set = {k, e}
-
+left = Math.max(2, 3)
 left = 3
 
-Add 'w'.
+Update:
 
-Set = {k, e, w}
+charIndex['c'] = 6
 
-Window = "kew"
+Window:
 
-Length = 5 - 3 + 1 = 3
+"abc"
+
+Length:
+
+5 - 3 + 1 = 3
+
+maxLength = 3
+
+---
+
+## Iteration 7
+
+right = 6
+ch = 'b'
+
+charIndex['b'] = 5
+
+left = Math.max(3, 5)
+left = 5
+
+Update:
+
+charIndex['b'] = 7
+
+Window:
+
+"cb"
+
+Length:
+
+6 - 5 + 1 = 2
+
+maxLength = 3
+
+---
+
+## Iteration 8
+
+right = 7
+ch = 'b'
+
+charIndex['b'] = 7
+
+left = Math.max(5, 7)
+left = 7
+
+Update:
+
+charIndex['b'] = 8
+
+Window:
+
+"b"
+
+Length:
+
+7 - 7 + 1 = 1
 
 maxLength = 3
 
@@ -221,11 +305,13 @@ maxLength = 3
 
 ## Final Answer
 
-Longest substring without repeating characters:
+Longest substring:
 
-"kew"
+"abc"
 
-Length = 3
+Length:
+
+3
 
 Output:
 
@@ -235,21 +321,19 @@ Output:
 
 ## Time Complexity
 
-Right pointer moves through the string : O(n)
+The right pointer traverses the string once.
 
-Left pointer also moves through the string : O(n)
+Time Complexity:
 
-Overall : O(n)
+O(n)
 
 ---
 
 ## Space Complexity
 
-HashSet stores at most the unique characters:
+The charIndex array has a fixed size of 128.
 
-O(min(n, charset))
-
-For typical ASCII characters:
+Space Complexity:
 
 O(1)
 
