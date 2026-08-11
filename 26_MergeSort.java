@@ -1,117 +1,82 @@
 import java.util.*;
 
 class Solution {
-
-    // Stores the value and its original index.
-    // originalIdx is needed because Merge Sort changes
-    // the order of the elements.
-    private class ArrayValWithOrigIdx {
-        int val;
-        int originalIdx;
-
-        public ArrayValWithOrigIdx(int val, int originalIdx) {
-            this.val = val;
-            this.originalIdx = originalIdx;
-        }
-    }
-
     public List<Integer> countSmaller(int[] nums) {
-        if (nums == null || nums.length == 0) {
-            return new LinkedList<>();
-        }
+        int min = nums[0];
+        int max = nums[0];
 
-        int n = nums.length;
-        int[] result = new int[n];
+        // Find the minimum and maximum values.
+        // We use them to convert negative values
+        // into positive indices for the Fenwick Tree.
+        for (int i = 0; i < nums.length; i++) {
+            final int v = nums[i];
 
-        // Store every value with its original index.
-        ArrayValWithOrigIdx[] newNums =
-                new ArrayValWithOrigIdx[n];
-
-        for (int i = 0; i < n; i++) {
-            newNums[i] =
-                    new ArrayValWithOrigIdx(nums[i], i);
-        }
-
-        // Merge Sort + Counting
-        mergeSortAndCount(newNums, 0, n - 1, result);
-
-        List<Integer> resultList = new LinkedList<>();
-        for (int value : result) {
-            resultList.add(value);
-        }
-
-        return resultList;
-    }
-
-    private void mergeSortAndCount(
-            ArrayValWithOrigIdx[] nums,
-            int start,
-            int end,
-            int[] result) {
-
-        // One element is already sorted.
-        if (start >= end) {
-            return;
-        }
-
-        int mid = start + (end - start) / 2;
-
-        // Sort left half.
-        mergeSortAndCount(nums, start, mid, result);
-
-        // Sort right half.
-        mergeSortAndCount(nums, mid + 1, end, result);
-
-        int leftPos = start;
-        int rightPos = mid + 1;
-
-        ArrayList<ArrayValWithOrigIdx> merged =
-                new ArrayList<>();
-
-        // Number of elements from the right half
-        // that are smaller than the current left element.
-        int rightSmallerCount = 0;
-
-        while (leftPos <= mid && rightPos <= end) {
-
-            if (nums[rightPos].val < nums[leftPos].val) {
-
-                // Right element is smaller, so count it.
-                rightSmallerCount++;
-
-                merged.add(nums[rightPos]);
-                rightPos++;
-
-            } else {
-
-                // All previously counted right elements
-                // are smaller than this left element.
-                result[nums[leftPos].originalIdx]
-                        += rightSmallerCount;
-
-                merged.add(nums[leftPos]);
-                leftPos++;
+            if (v < min) {
+                min = v;
+            } else if (v > max) {
+                max = v;
             }
         }
 
-        // Add remaining left elements.
-        while (leftPos <= mid) {
-            result[nums[leftPos].originalIdx]
-                    += rightSmallerCount;
+        // Shift all values so that they become
+        // positive Fenwick Tree indices.
+        final int delta = -min + 1;
 
-            merged.add(nums[leftPos]);
-            leftPos++;
+        // Fenwick Tree.
+        // arr[x] helps us store frequency information
+        // and calculate how many smaller values exist.
+        final int[] arr = new int[max + delta + 1];
+
+        final int[] res = new int[nums.length];
+
+        // Traverse from RIGHT to LEFT.
+        for (int i = nums.length - 1; i >= 0; i--) {
+
+            // Convert nums[i] into a positive index.
+            final int v = nums[i] + delta;
+
+            // Count how many previously seen values
+            // are smaller than nums[i].
+            res[i] = get(arr, v - 1);
+
+            // Add the current value to the Fenwick Tree.
+            add(arr, v);
         }
 
-        // Add remaining right elements.
-        while (rightPos <= end) {
-            merged.add(nums[rightPos]);
-            rightPos++;
+        // Return the result as a List.
+        return new AbstractList<Integer>() {
+            @Override
+            public Integer get(int index) {
+                return res[index];
+            }
+
+            @Override
+            public int size() {
+                return res.length;
+            }
+        };
+    }
+
+    // Returns the number of elements with index <= v.
+    // In other words, it gives the frequency/prefix sum
+    // of all values smaller than the current value.
+    static int get(final int[] arr, int v) {
+        int sum = 0;
+
+        while (v > 0) {
+            sum += arr[v];
+            v -= v & -v;
         }
 
-        // Copy merged elements back.
-        for (int i = 0; i < merged.size(); i++) {
-            nums[start + i] = merged.get(i);
+        return sum;
+    }
+
+    // Adds one occurrence of value v
+    // into the Fenwick Tree.
+    static void add(final int[] arr, int v) {
+        while (v < arr.length) {
+            arr[v]++;
+            v += v & -v;
         }
     }
 }
@@ -122,63 +87,184 @@ class Solution {
 ==================================================
 
 Problem:
-For every nums[i], count how many elements
-smaller than nums[i] are present on its right.
+
+For every nums[i], find how many elements
+smaller than nums[i] are present on its RIGHT.
 
 Example:
+
 nums = [5, 2, 6, 1]
 
 Answer:
+
 [2, 1, 1, 0]
 
-Brute Force:
-Check every element against all elements
-to its right.
 
-Time = O(N²)
+==================================================
+## Main Idea
+==================================================
 
-Better Approach:
-Use Merge Sort.
+Instead of checking every element on the right,
+we process the array from:
 
-During merging, both halves are sorted.
-Whenever a RIGHT element is smaller than
-a LEFT element, we increase:
+RIGHT → LEFT
 
-rightSmallerCount
 
-When a LEFT element is selected, all the
-previously counted RIGHT elements are smaller
-than it.
+Why?
+
+When we are at nums[i], all elements that were
+originally to its right have already been processed.
+
+We store their frequencies inside a:
+
+Fenwick Tree
+(Binary Indexed Tree)
+
+
+Then we ask:
+
+"How many already-seen values are smaller
+than the current value?"
+
+
+==================================================
+## What Is a Fenwick Tree?
+==================================================
+
+Think of it as a special array that allows us
+to efficiently:
+
+1. Add a number
+2. Count numbers up to a certain value
+
+For example, suppose we have already seen:
+
+[1, 2, 6]
+
+If the current number is:
+
+5
+
+We want:
+
+How many seen numbers are < 5?
+
+Answer:
+
+1 and 2
 
 So:
 
-result[originalIdx] += rightSmallerCount
+2
+
+
+The Fenwick Tree lets us find this quickly.
 
 
 ==================================================
-## Why originalIdx?
+## Why Do We Need delta?
 ==================================================
 
-Merge Sort changes the order.
+Fenwick Tree uses positive indices.
+
+But nums can contain negative numbers.
 
 Example:
 
-Original:
-[5, 2, 6, 1]
+nums = [-3, -1, 2]
 
-Objects:
-(5,0), (2,1), (6,2), (1,3)
 
-The second value is the original index.
+We cannot directly use:
 
-After sorting, 5 may move to another position,
-but we still know:
+-3
 
-5 originally came from index 0.
+as an array index.
 
-Therefore its answer goes into:
+So we shift every number.
 
-result[0]
+delta = -min + 1
+
+
+If:
+
+min = -3
+
+then:
+
+delta = 4
+
+
+Values become:
+
+-3 + 4 = 1
+-1 + 4 = 3
+ 2 + 4 = 6
+
+
+Now all values can be used as indices.
+
+
+==================================================
+## What Does get() Do?
+==================================================
+
+get(arr, v)
+
+returns the number of values whose
+Fenwick Tree index is <= v.
+
+
+For the current value:
+
+v
+
+we call:
+
+get(arr, v - 1)
+
+
+Why v - 1?
+
+Because we want:
+
+STRICTLY smaller
+
+
+Example:
+
+current value = 5
+
+We want:
+
+1, 2, 3, 4
+
+
+NOT:
+
+5
+
+
+Therefore we query:
+
+v - 1
+
+
+==================================================
+## What Does add() Do?
+==================================================
+
+add(arr, v)
+
+means:
+
+"One occurrence of value v has been seen."
+
+
+So:
+
+arr
+
+is updated to remember that this value exists.
 
 
 ==================================================
@@ -186,120 +272,153 @@ result[0]
 ==================================================
 
 Input:
-[5, 2, 6, 1]
+
+nums = [5, 2, 6, 1]
+
 
 Initial:
-result = [0, 0, 0, 0]
 
-### Step 1: Merge [5] and [2]
-
-Compare:
-
-5 > 2
-
-So 2 is smaller than 5.
-
-rightSmallerCount = 1
-
-Move 2.
-
-Now 5 remains.
-
-5 originally had index 0.
-
-Therefore:
-
-result[0] += 1
-
-result = [1, 0, 0, 0]
-
-Merged:
-
-[2, 5]
+res = [0, 0, 0, 0]
 
 
-### Step 2: Merge [6] and [1]
-
-Compare:
-
-6 > 1
-
-So 1 is smaller than 6.
-
-rightSmallerCount = 1
-
-6 originally had index 2.
-
-Therefore:
-
-result[2] += 1
-
-result = [1, 0, 1, 0]
-
-Merged:
-
-[1, 6]
+We start from the RIGHT.
 
 
-### Step 3: Final Merge
+--------------------------------------------------
+### Iteration 1
+--------------------------------------------------
 
-Left:
-[2, 5]
+i = 3
 
-Right:
-[1, 6]
+nums[i] = 1
 
-Compare 2 and 1:
 
-1 < 2
+Nothing is to the right of 1.
+
 
 So:
 
-rightSmallerCount = 1
-
-Move 1.
-
-Now compare 2 and 6:
-
-2 < 6
-
-Move 2.
-
-Since:
-
-rightSmallerCount = 1
-
-one right element is smaller than 2.
-
-2 originally had index 1.
-
-Therefore:
-
-result[1] += 1
-
-result = [1, 1, 1, 0]
+res[3] = 0
 
 
-Now compare 5 and 6:
-
-5 < 6
-
-Move 5.
-
-The counter is still 1.
-
-That means 1 is also smaller than 5.
-
-5 originally had index 0.
-
-Therefore:
-
-result[0] += 1
-
-result = [2, 1, 1, 0]
+Now add 1 to the Fenwick Tree.
 
 
-6 remains.
+Seen:
+
+[1]
+
+
+Result:
+
+[0, 0, 0, 0]
+
+
+--------------------------------------------------
+### Iteration 2
+--------------------------------------------------
+
+i = 2
+
+nums[i] = 6
+
+
+Already seen:
+
+[1]
+
+
+Numbers smaller than 6:
+
+[1]
+
+
+So:
+
+res[2] = 1
+
+
+Now add 6.
+
+
+Seen:
+
+[1, 6]
+
+
+Result:
+
+[0, 0, 1, 0]
+
+
+--------------------------------------------------
+### Iteration 3
+--------------------------------------------------
+
+i = 1
+
+nums[i] = 2
+
+
+Already seen:
+
+[1, 6]
+
+
+Numbers smaller than 2:
+
+[1]
+
+
+So:
+
+res[1] = 1
+
+
+Now add 2.
+
+
+Seen:
+
+[1, 6, 2]
+
+
+Result:
+
+[0, 1, 1, 0]
+
+
+--------------------------------------------------
+### Iteration 4
+--------------------------------------------------
+
+i = 0
+
+nums[i] = 5
+
+
+Already seen:
+
+[1, 6, 2]
+
+
+Numbers smaller than 5:
+
+[1, 2]
+
+
+So:
+
+res[0] = 2
+
+
+Now add 5.
+
+
+Seen:
+
+[1, 2, 5, 6]
+
 
 Final:
 
@@ -307,76 +426,162 @@ Final:
 
 
 ==================================================
-## Why Does rightSmallerCount Work?
+## Why Do We Traverse Right to Left?
 ==================================================
 
 Suppose:
 
-LEFT = [2, 5, 7]
-RIGHT = [1, 6]
-
-If:
-
-1 < 2
-
-then because the LEFT side is sorted:
-
-1 < 2
-1 < 5
-1 < 7
-
-So the same RIGHT element can be counted
-for all remaining LEFT elements.
-
-This is the main trick that makes the
-solution O(N log N).
+nums = [5, 2, 6, 1]
 
 
-==================================================
-## Important Condition
-==================================================
+When we reach 5:
 
-We use:
+Everything already processed is:
 
-nums[rightPos].val < nums[leftPos].val
+[2, 6, 1]
 
-NOT:
 
-<=
+These are exactly the elements
+to the RIGHT of 5.
 
-Because we only want elements that are
-STRICTLY smaller.
 
-Equal values do not count.
+Therefore, we don't need to separately
+search the right side.
+
+
+The Fenwick Tree already contains them.
 
 
 ==================================================
-## Final Answer
+## Complete Flow
+==================================================
+
+For every element from RIGHT to LEFT:
+
+1. Convert value to a positive index.
+
+2. Query Fenwick Tree:
+
+   How many seen values are smaller?
+
+3. Store that count in res[i].
+
+4. Add the current value to the tree.
+
+
+In short:
+
+QUERY → STORE → ADD
+
+
+==================================================
+## Why get(v - 1)?
+==================================================
+
+Suppose current value is:
+
+5
+
+
+We want:
+
+values < 5
+
+
+So:
+
+1
+2
+3
+4
+
+
+We do NOT want:
+
+5
+
+
+Therefore:
+
+get(5 - 1)
+
+which means:
+
+get(4)
+
+
+==================================================
+## Why Does add() Come After get()?
+==================================================
+
+This is very important.
+
+We first ask:
+
+"How many smaller elements are already
+to my right?"
+
+
+Then we add the current element.
+
+
+If we added it first, the current element
+could incorrectly be included in its own count.
+
+
+So the order is:
+
+get()
+↓
+add()
+
+
+==================================================
+## Final Result
 ==================================================
 
 Input:
+
 [5, 2, 6, 1]
 
+
 Output:
+
 [2, 1, 1, 0]
 
-5 -> smaller on right: 2, 1
-2 -> smaller on right: 1
-6 -> smaller on right: 1
-1 -> smaller on right: none
+
+Meaning:
+
+5 → 2 smaller elements: 2, 1
+
+2 → 1 smaller element: 1
+
+6 → 1 smaller element: 1
+
+1 → 0 smaller elements
 
 
 ==================================================
 ## Time Complexity
 ==================================================
 
-Merge Sort:
+Finding min/max:
+
+O(N)
+
+
+For every element:
+
+get() → O(log N)
+add() → O(log N)
+
+
+For N elements:
 
 O(N log N)
 
-Every merge processes each element once.
 
-Total:
+Overall:
 
 O(N log N)
 
@@ -385,11 +590,16 @@ O(N log N)
 ## Space Complexity
 ==================================================
 
-result[] = O(N)
-newNums[] = O(N)
-merged = O(N)
+Fenwick Tree:
 
-Total:
+O(N)
+
+Result array:
+
+O(N)
+
+
+Overall:
 
 O(N)
 
@@ -398,23 +608,31 @@ O(N)
 ## Easy Way to Remember
 ==================================================
 
-Normal Merge Sort:
+Go:
 
-DIVIDE → SORT → MERGE
+RIGHT → LEFT
 
-This problem:
 
-DIVIDE → SORT → MERGE + COUNT
+For every number:
 
-During merge:
+1. ASK:
 
-RIGHT < LEFT
-      ↓
-counter++
+   How many smaller values have I seen?
 
-LEFT is selected
-      ↓
-result[originalIdx] += counter
+
+2. STORE:
+
+   Put answer in res[i]
+
+
+3. ADD:
+
+   Add current value to Fenwick Tree
+
+
+Remember:
+
+QUERY → STORE → ADD
 
 ==================================================
 */
