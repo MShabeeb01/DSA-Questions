@@ -2,14 +2,16 @@ class Solution {
     public String removeOccurrences(String s, String part) {
 
         // Keep removing 'part' as long as it exists in s.
-        while (s.length() > 0 && s.contains(part)) {
+        while (s.contains(part)) {
 
-            // Find the first occurrence of part.
+            // Find the starting index of 'part'.
             int index = s.indexOf(part);
 
-            // Remove 'part' from the string.
+            // Remove 'part' by joining:
+            // 1. Everything BEFORE part
+            // 2. Everything AFTER part
             s = s.substring(0, index)
-                    + s.substring(index + part.length());
+              + s.substring(index + part.length());
         }
 
         return s;
@@ -21,378 +23,228 @@ class Solution {
 ## Code Summary
 ==================================================
 
-We are given:
+1. Find where 'part' occurs in the string.
 
-s    = original string
-part = substring we need to remove
+2. Split the string into two parts:
 
+   BEFORE part + AFTER part
 
-We repeatedly:
+3. Join them together.
 
-1. Find part inside s.
-2. Remove that occurrence.
-3. Repeat until part no longer exists.
+4. This removes the occurrence of 'part'.
 
-
-For example:
-
-s = "daabcbaabcbc"
-part = "abc"
-
-
-Remove first "abc":
-
-"daabcbaabcbc"
-    ↓
-"dabaabcbc"
-
-
-Remove "abc" again:
-
-"dabaabcbc"
-      ↓
-"dab"
-
-
-Final answer:
-
-"dab"
-
+5. Repeat until 'part' no longer exists.
 
 ==================================================
-## Main Idea
+## Important Line
 ==================================================
 
-The important methods are:
+s = s.substring(0, index)
+  + s.substring(index + part.length());
 
-contains()
-indexOf()
-substring()
+Suppose:
 
-
---------------------------------------------------
-### contains()
---------------------------------------------------
-
-Checks whether part exists inside s.
-
-Example:
-
-s = "helloabc"
-
-s.contains("abc")
-
-→ true
-
-
-If:
-
-s = "hello"
-
-s.contains("abc")
-
-→ false
-
-
---------------------------------------------------
-### indexOf()
---------------------------------------------------
-
-Finds the starting index of part.
-
-Example:
-
-s = "daabcbaabcbc"
+s    = "daabcbaabcbc"
 part = "abc"
 
+index = 2
 
-The first "abc" starts at index:
+The string looks like:
 
-2
+d a [a b c] b a a b c
+0 1  2 3 4  5 6 7 8 9 10 11
 
+Everything BEFORE "abc":
+
+s.substring(0, 2)
+
+= "da"
+
+Everything AFTER "abc":
+
+s.substring(2 + 3)
+
+= s.substring(5)
+
+= "baabcbc"
+
+Join them:
+
+"da" + "baabcbc"
+
+= "dabaabcbc"
 
 So:
 
-s.indexOf(part)
-
-→ 2
-
-
---------------------------------------------------
-### substring()
---------------------------------------------------
-
-We use substring() to keep everything
-BEFORE and AFTER the occurrence.
-
-
-If:
-
-s = "helloabcworld"
-
-part = "abc"
-
-
-index = 5
-
-
-Before:
-
-s.substring(0, 5)
-
-→ "hello"
-
-
-After:
-
-s.substring(5 + 3)
-
-→ "world"
-
-
-Combine:
-
-"hello" + "world"
-
-→ "helloworld"
-
-
-So "abc" is removed.
-
+daabcbaabcbc
+   ↓ remove abc
+dabaabcbc
 
 ==================================================
 ## Iteration
 ==================================================
 
-Let's take:
+Input:
 
 s = "daabcbaabcbc"
-
 part = "abc"
-
 
 --------------------------------------------------
 ### Iteration 1
 --------------------------------------------------
 
-Current:
+s = "daabcbaabcbc"
 
-daabcbaabcbc
-
-
-Find:
-
-"abc"
-
-
-First occurrence starts at:
+First "abc" starts at:
 
 index = 2
 
+BEFORE:
 
-Remove it:
+"da"
 
+AFTER:
 
-da + baabcbc
+"baabcbc"
 
-↓
+Remove:
+
+"da" + "baabcbc"
+
+New s:
 
 "dabaabcbc"
-
-
-Current string:
-
-dabaabcbc
-
 
 --------------------------------------------------
 ### Iteration 2
 --------------------------------------------------
 
-Current:
+s = "dabaabcbc"
 
-dabaabcbc
+"abc" starts at:
 
+index = 4
 
-Find:
+BEFORE:
 
-"abc"
+"daab"
 
+AFTER:
 
-Its index is:
+"bc"
 
-5
+Remove:
 
+"daab" + "bc"
 
-Remove it:
+New s:
 
-
-daba + bc
-
-Wait — let's carefully track the string.
-
-Current:
-
-dabaabcbc
-
-Indexes:
-
-0 1 2 3 4 5 6 7 8
-d a b a a b c b c
-
-
-"abc" starts at index 4:
-
-d a b a [a b c] b c
-
-Remove it:
-
-"dabab c"
-
-↓
-
-"dababc"
-
-
-Now:
-
-s = "dababc"
-
+"daabbc"
 
 --------------------------------------------------
 ### Iteration 3
 --------------------------------------------------
 
-Current:
+s = "daabbc"
 
-dababc
-
-
-"abc" starts at index 3.
-
-
-Remove:
-
-dab + ""
-
-↓
-
-"dab"
-
-
-Now:
-
-"abc" no longer exists.
-
+"abc" does not exist.
 
 Stop.
 
-
 Final answer:
 
-"dab"
-
+"daabbc"
 
 ==================================================
-## Why Do We Use a while Loop?
+## How substring() Works
 ==================================================
 
-We cannot remove only one occurrence.
+substring(start, end)
 
-After removing one occurrence, two parts of the
-string can join together and create a NEW
-occurrence of part.
-
+takes characters from start to end - 1.
 
 Example:
 
-s = "aabbcc"
-part = "abc"
+String:
 
+"abcdef"
 
-The string can change after every removal.
+substring(0, 3)
 
+= "abc"
 
-Therefore we keep checking:
+substring(3)
 
-while part exists
+= "def"
 
+So:
 
-until there is nothing left to remove.
+substring(0, index)
 
+means:
+
+"Give me everything BEFORE index"
+
+And:
+
+substring(index + part.length())
+
+means:
+
+"Skip the entire part and give me everything AFTER it."
 
 ==================================================
-## Easy Way to Remember
+## Why Do We Use index + part.length()?
 ==================================================
 
-Think:
+Suppose:
 
-FIND → REMOVE → REPEAT
+s = "abcdef"
+part = "cd"
 
+index = 2
 
-1. Find part using:
+We want to remove:
 
-   indexOf()
+a b [c d] e f
+      ↑ ↑
 
+After "cd", the next character is index:
 
-2. Remove it using:
+2 + 2 = 4
 
-   substring()
+Therefore:
 
+s.substring(4)
 
-3. Repeat using:
+= "ef"
 
-   while()
+So:
 
+"ab" + "ef"
 
-4. Return the remaining string.
-
+= "abef"
 
 ==================================================
 ## Time Complexity
 ==================================================
 
-Finding and creating strings can take O(N).
+Finding and removing substrings can take O(N)
+per operation.
 
-Since we may remove the substring multiple times,
-the worst-case complexity can be:
+In the worst case, the operation can happen
+many times.
 
-O(N²)
+Overall:
 
-
-where N is the length of s.
-
+O(N²) approximately.
 
 ==================================================
 ## Space Complexity
 ==================================================
 
-substring concatenation creates new strings.
-
-Therefore, the extra space can be:
-
 O(N)
 
-
-==================================================
-## Pattern to Remember
-==================================================
-
-while (substring exists) {
-
-    find it
-
-    remove it
-}
-
-
-FIND
-  ↓
-REMOVE
-  ↓
-CHECK AGAIN
-  ↓
-REPEAT
-
-==================================================
+Because String objects are immutable and new
+strings are created when we use substring and +.
 */
