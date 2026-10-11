@@ -1,116 +1,121 @@
-class Solution {
+public class Solution {
+
+    // ==========================================================
+    // LeetCode 74: Search a 2D Matrix (Flattened Binary Search)
+    // Time Complexity: O(log(m * n)) | Space Complexity: O(1) auxiliary
+    // ==========================================================
     public boolean searchMatrix(int[][] matrix, int target) {
-        int n = matrix.length;
-        int m = matrix[0].length;
+        if (matrix == null || matrix.length == 0 || matrix[0].length == 0) {
+            return false;
+        }
+
+        int n = matrix.length;       // Number of rows
+        int m = matrix[0].length;    // Number of columns
 
         int low = 0;
-        int high = n * m - 1;
+        int high = (n * m) - 1;      // Last index in virtual 1D array
 
         while (low <= high) {
-            int mid = (low + high) / 2;
+            // Prevent integer overflow for large dimensions
+            int mid = low + (high - low) / 2;
 
+            // Map 1D index to 2D matrix coordinates: (row, col)
             int row = mid / m;
             int col = mid % m;
 
             if (matrix[row][col] == target) {
                 return true;
             } else if (matrix[row][col] < target) {
-                low = mid + 1;
+                low = mid + 1;       // Target lies in the right partition
             } else {
-                high = mid - 1;
+                high = mid - 1;      // Target lies in the left partition
             }
         }
 
         return false;
     }
+
+    public static void main(String[] args) {
+        Solution solver = new Solution();
+
+        int[][] matrix1 = {
+            {1, 3, 5, 7},
+            {10, 11, 16, 20},
+            {23, 30, 34, 60}
+        };
+
+        int target1 = 3;
+        System.out.println("Search " + target1 + " in matrix:");
+        System.out.println("Found: " + solver.searchMatrix(matrix1, target1));
+        // Output: true
+
+        int target2 = 13;
+        System.out.println("\nSearch " + target2 + " in matrix:");
+        System.out.println("Found: " + solver.searchMatrix(matrix1, target2));
+        // Output: false
+
+        // Single element matrix test case:
+        int[][] matrix2 = {{1}};
+        int target3 = 1;
+        System.out.println("\nSearch " + target3 + " in single-cell matrix:");
+        System.out.println("Found: " + solver.searchMatrix(matrix2, target3));
+        // Output: true
+    }
 }
 
 /*
------------------------------------------
-Code Summary
------------------------------------------
-1. Consider the entire matrix as a single sorted 1D array.
-2. Apply Binary Search on indices from 0 to (rows × columns - 1).
-3. Find the middle index.
-4. Convert the middle index into row and column.
-5. Compare the current element with the target.
-6. If the target is greater, search the right half.
-7. If the target is smaller, search the left half.
-8. If the target is found, return true.
-9. If the search ends, return false.
+==================== SUMMARY ====================
 
------------------------------------------
-Iteration
------------------------------------------
+Topic: LeetCode 74 — Search a 2D Matrix (Flattened Binary Search)
 
-Matrix
+Core Strategy:
+1. Virtual 1D Array Flattening:
+   - The matrix rows are sorted left-to-right, and each row's first element strictly exceeds the prior row's last element.
+   - Hence, treating the $n \times m$ grid as a continuous 1D sorted array of length $n \cdot m$ preserves total ascending order.
+2. Direct 1D-to-2D Coordinate Projection:
+   - Instead of allocating extra memory to flatten the matrix, project any virtual index `mid` directly using modular arithmetic:
+     - `row = mid / m`
+     - `col = mid % m`
+3. Standard Binary Search:
+   - Maintain search boundaries `low = 0` and `high = (n * m) - 1`.
+   - Narrow the search window by half on every comparison until `target` is found or bounds cross.
 
- 1   3   5   7
-10  11  16  20
-23  30  34  60
+Key Implementation Details:
+- Mid Calculation:
+  - Using `mid = low + (high - low) / 2` safeguards against signed 32-bit integer overflow when $(low + high) > 2^{31} - 1$.
+- Boundary Guards:
+  - Check for `null` or empty matrices (`matrix.length == 0 || matrix[0].length == 0`) before accessing grid lengths to avoid runtime exceptions.
 
-Target = 16
+-------------------------------------------------
 
-Virtual 1D Array
+Virtual 1D Mapping & Search Progression
 
-Index :  0  1  2  3  4  5  6  7  8  9 10 11
-Value :  1  3  5  7 10 11 16 20 23 30 34 60
+Input Matrix (n = 3, m = 4), Target = 3:
+  Row 0: [ 1,  3,  5,  7]
+  Row 1: [10, 11, 16, 20]
+  Row 2: [23, 30, 34, 60]
 
-Iteration 1
-------------
-low = 0
-high = 11
+Virtual 1D Array Representation:
+  Index:   0   1   2   3   4   5   6   7   8   9  10  11
+  Value: [ 1,  3,  5,  7, 10, 11, 16, 20, 23, 30, 34, 60]
 
-mid = (0 + 11) / 2 = 5
+Trace:
+---------------------------------------------------------------------------------------------------------
+Iteration | low | high | mid | Row (mid / 4) | Col (mid % 4) | matrix[row][col] | Action Taken
+---------------------------------------------------------------------------------------------------------
+1         | 0   | 11   | 5   | 1             | 1             | 11               | 11 > 3 -> high = mid - 1 = 4
+2         | 0   | 4    | 2   | 0             | 2             | 5                | 5 > 3  -> high = mid - 1 = 1
+3         | 0   | 1    | 0   | 0             | 0             | 1                | 1 < 3  -> low = mid + 1 = 1
+4         | 1   | 1    | 1   | 0             | 1             | 3                | 3 == 3 -> Found! (return true)
+---------------------------------------------------------------------------------------------------------
 
-row = 5 / 4 = 1
-col = 5 % 4 = 1
+-------------------------------------------------
 
-matrix[1][1] = 11
-
-11 < 16
-
-low = 6
-
-Iteration 2
-------------
-low = 6
-high = 11
-
-mid = (6 + 11) / 2 = 8
-
-row = 8 / 4 = 2
-col = 8 % 4 = 0
-
-matrix[2][0] = 23
-
-23 > 16
-
-high = 7
-
-Iteration 3
-------------
-low = 6
-high = 7
-
-mid = (6 + 7) / 2 = 6
-
-row = 6 / 4 = 1
-col = 6 % 4 = 2
-
-matrix[1][2] = 16
-
-Target Found ✓
-
------------------------------------------
-Time Complexity
------------------------------------------
-Binary Search : O(log(m × n))
-
-Overall       : O(log(m × n))
-
------------------------------------------
-Space Complexity
------------------------------------------
-Auxiliary Space : O(1)
+Complexity Analysis:
+- Time Complexity : O(log(m * n))
+  - Halves the total search space of $m \cdot n$ elements at each step.
+  - Equivalent to $O(\log m + \log n)$.
+- Space Complexity: O(1) auxiliary space
+  - Solved in-place using only scalar pointer variables (`low`, `high`, `mid`, `row`, `col`).
+=================================================
 */
