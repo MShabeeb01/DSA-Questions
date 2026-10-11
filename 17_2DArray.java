@@ -130,3 +130,10 @@ Edge Cases Handled:
 -------------------------------------------------
 
 Complexity Analysis:
+- Time Complexity : O(log(n * m))
+  - At every step of binary search, the virtual search space of size $n \cdot m$ is halved.
+  - Mathematically equivalent to $O(\log n + \log m)$.
+- Space Complexity: O(1) auxiliary space
+  - Operates completely in-place; only scalar primitive pointer variables (`n`, `m`, `low`, `high`, `mid`, `row`, `col`) are allocated.
+=================================================
+*/
