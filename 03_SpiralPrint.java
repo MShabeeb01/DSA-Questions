@@ -53,10 +53,10 @@ public class ArraysCC {
     public static void main(String args[]) {
         // Example matrix
         int matrix[][] = {
-            {1,  2,  3,  4},
-            {5,  6,  7,  8},
-            {9,  10, 11, 12},
-            {13, 14, 15, 16}
+            {1,   2,   3,   4},
+            {5,   6,   7,   8},
+            {9,  10,  11,  12},
+            {13, 14,  15,  16}
         };
 
         // Function call
@@ -65,93 +65,151 @@ public class ArraysCC {
 }
 
 /*
-==================== SUMMARY ====================
+==================== DEEP DIVE SUMMARY & EXECUTION TRACE ====================
 
-Problem: LeetCode 54 - Spiral Matrix
+Problem: LeetCode 54 - Spiral Matrix Traversal
 
-Objective:
-Given an m x n matrix, return all elements of the matrix in clockwise spiral order.
+Core Concept: 
+A matrix spiral is just 4 simple for-loops running in a loop, while 4 walls 
+shrink inward like a closing room after every full cycle:
+- Top Wall:    `startrow`
+- Bottom Wall: `endrow`
+- Left Wall:   `startcol`
+- Right Wall:  `endcol`
 
-Core Logic:
-- Uses 4 shifting boundary pointers:
-  - `startrow`: Top boundary (moves down after layer complete).
-  - `endrow`: Bottom boundary (moves up after layer complete).
-  - `startcol`: Left boundary (moves right after layer complete).
-  - `endcol`: Right boundary (moves left after layer complete).
-- Traversal order per cycle:
-  1. Top: Left -> Right along `startrow` from `startcol` to `endcol`.
-  2. Right: Top -> Bottom along `endcol` from `startrow + 1` to `endrow`.
-  3. Bottom: Right -> Left along `endrow` from `endcol - 1` to `startcol`.
-  4. Left: Bottom -> Top along `startcol` from `endrow - 1` to `startrow + 1`.
+=============================================================================
+INPUT MATRIX (4 x 4):
+Index:       c=0   c=1   c=2   c=3
+r=0  -----> [  1,    2,    3,    4 ]
+r=1  -----> [  5,    6,    7,    8 ]
+r=2  -----> [  9,   10,   11,   12 ]
+r=3  -----> [ 13,   14,   15,   16 ]
 
-Boundary Shrinking & Guards:
-- Corner overlap prevention:
-  - Right wall starts at `startrow + 1` (avoids reprinting top-right corner).
-  - Bottom wall starts at `endcol - 1` (avoids reprinting bottom-right corner).
-  - Left wall starts at `endrow - 1` and stops at `startrow + 1` (avoids bottom-left and top-left corners).
-- Single-dimension edge cases:
-  - `if (startrow == endrow) break;` prevents duplicate prints on single remaining rows (e.g., 1 x N).
-  - `if (startcol == endcol) break;` prevents duplicate prints on single remaining columns (e.g., N x 1).
+Initial Boundaries:
+startrow = 0, endrow = 3
+startcol = 0, endcol = 3
+=============================================================================
 
--------------------------------------------------
+=============================================================================
+CYCLE 1: OUTER LAYER (Border walls: rows 0 & 3, cols 0 & 3)
+Condition Check: while (0 <= 3 && 0 <= 3) -> TRUE! Enter loop.
+=============================================================================
 
-Pointer Walkthrough Visual
+--- [Side 1: TOP WALL - Left to Right] ---
+Code: for (int j = startcol; j <= endcol; j++)
+State: row is fixed at startrow (0), j iterates from 0 to 3
+- Iteration j=0: prints matrix[0][0] = 1
+- Iteration j=1: prints matrix[0][1] = 2
+- Iteration j=2: prints matrix[0][2] = 3
+- Iteration j=3: prints matrix[0][3] = 4
+Condition j <= 3 fails at j=4 -> Loop ends.
+Output so far: 1 2 3 4
 
-Matrix: 4 x 4
+--- [Side 2: RIGHT WALL - Top to Bottom] ---
+Code: for (int i = startrow + 1; i <= endrow; i++)
+Why i = startrow + 1? Because (0, 3) which is '4' was just printed! We start at row 1.
+State: col is fixed at endcol (3), i iterates from 1 to 3
+- Iteration i=1: prints matrix[1][3] = 8
+- Iteration i=2: prints matrix[2][3] = 12
+- Iteration i=3: prints matrix[3][3] = 16
+Condition i <= 3 fails at i=4 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16
 
-Cycle 1 (Outer Ring):
-startrow = 0, endrow = 3, startcol = 0, endcol = 3
+--- [Side 3: BOTTOM WALL - Right to Left] ---
+Code: for (int j = endcol - 1; j >= startcol; j--)
+Why j = endcol - 1? Because (3, 3) which is '16' was just printed! We start at col 2.
+Guard check: if (startrow == endrow) -> (0 == 3 is FALSE, don't break)
+State: row is fixed at endrow (3), j iterates from 2 down to 0
+- Iteration j=2: prints matrix[3][2] = 15
+- Iteration j=1: prints matrix[3][1] = 14
+- Iteration j=0: prints matrix[3][0] = 13
+Condition j >= 0 fails at j=-1 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16 15 14 13
 
-  startcol                                  endcol
-     v                                         v
-   [ 1  --->   2  --->   3  --->   4 ]  <- startrow (1. Top: 1, 2, 3, 4)
-     ^                             |
-     |                             v
-   [ 5                             8 ]             (2. Right: 8, 12, 16)
-     ^                             |
-     |                             v
-   [ 9                            12 ]
-     ^                             |
-     |                             v
-   [ 13 <---  14  <---  15  <---  16 ]  <- endrow   (3. Bottom: 15, 14, 13)
-                                                    (4. Left: 9, 5)
+--- [Side 4: LEFT WALL - Bottom to Top] ---
+Code: for (int i = endrow - 1; i >= startrow + 1; i--)
+Why i = endrow - 1? Because (3, 0) which is '13' was just printed! We start at row 2.
+Why i >= startrow + 1? Because (0, 0) which is '1' was printed at the very start! Stop at row 1.
+Guard check: if (startcol == endcol) -> (0 == 3 is FALSE, don't break)
+State: col is fixed at startcol (0), i iterates from 2 down to 1
+- Iteration i=2: prints matrix[2][0] = 9
+- Iteration i=1: prints matrix[1][0] = 5
+Condition i >= 1 fails at i=0 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16 15 14 13 9 5
 
-Cycle 2 (Inner Ring):
-startrow = 1, endrow = 2, startcol = 1, endcol = 2
+--- [SHRINK WALLS FOR NEXT CYCLE] ---
+startcol++; -> startcol becomes 1 (left wall moves right)
+startrow++; -> startrow becomes 1 (top wall moves down)
+endcol--;   -> endcol becomes 2   (right wall moves left)
+endrow--;   -> endrow becomes 2   (bottom wall moves up)
 
-   [ 6  --->   7 ]  <- startrow = 1 (1. Top: 6, 7)
-     ^         |
-     |         v
-   [ 10 <---  11 ]  <- endrow = 2   (2. Right: 11)
-                                    (3. Bottom: 10)
-                                    (4. Left: skipped, 1 >= 2 fails)
 
--------------------------------------------------
+=============================================================================
+CYCLE 2: INNER LAYER (Inner 2x2 square: elements 6, 7, 10, 11)
+Condition Check: while (1 <= 2 && 1 <= 2) -> TRUE! Enter loop.
+=============================================================================
 
-Trace Table
+--- [Side 1: TOP WALL - Left to Right] ---
+Code: for (int j = startcol; j <= endcol; j++)
+State: row is fixed at startrow (1), j iterates from 1 to 2
+- Iteration j=1: prints matrix[1][1] = 6
+- Iteration j=2: prints matrix[1][2] = 7
+Condition j <= 2 fails at j=3 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16 15 14 13 9 5 6 7
 
-Input: 4 x 4 Matrix
+--- [Side 2: RIGHT WALL - Top to Bottom] ---
+Code: for (int i = startrow + 1; i <= endrow; i++)
+Start at i = 1 + 1 = 2.
+State: col is fixed at endcol (2), i iterates from 2 to 2
+- Iteration i=2: prints matrix[2][2] = 11
+Condition i <= 2 fails at i=3 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16 15 14 13 9 5 6 7 11
 
--------------------------------------------------------------------------------------------------------------------------------------------------
-Cycle | Boundary Variables (Start of Cycle)     | Wall   | Traversal Range              | Elements Printed              | Output So Far
--------------------------------------------------------------------------------------------------------------------------------------------------
-1     | startrow=0, endrow=3, startcol=0, endcol=3 | Top    | row=0, col: 0 -> 3           | 1, 2, 3, 4                    | 1 2 3 4
-      |                                            | Right  | col=3, row: 1 -> 3           | 8, 12, 16                     | 1 2 3 4 8 12 16
-      |                                            | Bottom | row=3, col: 2 -> 0           | 15, 14, 13                    | 1 2 3 4 8 12 16 15 14 13
-      |                                            | Left   | col=0, row: 2 -> 1           | 9, 5                          | 1 2 3 4 8 12 16 15 14 13 9 5
--------------------------------------------------------------------------------------------------------------------------------------------------
-2     | startrow=1, endrow=2, startcol=1, endcol=2 | Top    | row=1, col: 1 -> 2           | 6, 7                          | ... 6 7
-      |                                            | Right  | col=2, row: 2 -> 2           | 11                            | ... 6 7 11
-      |                                            | Bottom | row=2, col: 1 -> 1           | 10                            | ... 6 7 11 10
-      |                                            | Left   | col=1, row: 1 -> 2 (Fails)   | None                          | 1 2 3 4 8 12 16 15 14 13 9 5 6 7 11 10
--------------------------------------------------------------------------------------------------------------------------------------------------
-End   | startrow=2, endrow=1, startcol=2, endcol=1 | Loop condition `startrow <= endrow` (2 <= 1) is false -> Terminates
--------------------------------------------------------------------------------------------------------------------------------------------------
+--- [Side 3: BOTTOM WALL - Right to Left] ---
+Code: for (int j = endcol - 1; j >= startcol; j--)
+Start at j = 2 - 1 = 1.
+Guard check: if (startrow == endrow) -> (1 == 2 is FALSE, don't break)
+State: row is fixed at endrow (2), j iterates from 1 down to 1
+- Iteration j=1: prints matrix[2][1] = 10
+Condition j >= 1 fails at j=0 -> Loop ends.
+Output so far: 1 2 3 4 8 12 16 15 14 13 9 5 6 7 11 10
 
-Complexity Analysis:
-- Time Complexity : O(m x n)
-  - Every single cell in the m x n grid is visited and printed exactly once.
-- Space Complexity: O(1)
-  - Operates directly on the input array using only 4 boundary pointer variables.
-=================================================
+--- [Side 4: LEFT WALL - Bottom to Top] ---
+Code: for (int i = endrow - 1; i >= startrow + 1; i--)
+Start at i = 2 - 1 = 1.
+Stop condition: i >= startrow + 1 => i >= (1 + 1) => i >= 2.
+Check loop entry: i = 1 >= 2 is FALSE!
+The loop does not run at all (0 iterations). No extra print!
+
+--- [SHRINK WALLS FOR NEXT CYCLE] ---
+startcol++; -> startcol becomes 2
+startrow++; -> startrow becomes 2
+endcol--;   -> endcol becomes 1
+endrow--;   -> endrow becomes 1
+
+
+=============================================================================
+CYCLE 3: TERMINATION CHECK
+=============================================================================
+Condition Check: while (startrow <= endrow && startcol <= endcol)
+Evaluates to:    while (2 <= 1 && 2 <= 1) -> FALSE!
+
+The while loop exits.
+All 16 cells visited cleanly!
+
+FINAL OUTPUT:
+1 2 3 4 8 12 16 15 14 13 9 5 6 7 11 10
+
+=============================================================================
+WHY ARE THE BREAK STATEMENTS CRITICAL? (Edge Case Example: 1 x 4 Matrix)
+Matrix: [1, 2, 3, 4] -> startrow = 0, endrow = 0, startcol = 0, endcol = 3
+
+1. TOP WALL prints: 1 2 3 4
+2. RIGHT WALL: i starts at 1, but endrow=0, doesn't run.
+3. BOTTOM WALL:
+   WITHOUT `if (startrow == endrow) break;`:
+   It would loop backwards and print: 3 2 1  <-- DUPLICATE BUG!
+   WITH `break`:
+   It sees 0 == 0, breaks immediately, and avoids the bug!
+=============================================================================
 */
