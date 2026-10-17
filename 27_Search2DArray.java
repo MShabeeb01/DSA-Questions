@@ -1,29 +1,36 @@
 class Solution {
     public boolean searchMatrix(int[][] matrix, int target) {
+        // Base case: check for null or empty matrix
+        if (matrix == null || matrix.length == 0 || matrix[0].length == 0) {
+            return false;
+        }
 
-        int m = matrix.length;
-        int n = matrix[0].length;
+        int n = matrix.length;
+        int m = matrix[0].length;
 
-        // Start from the TOP-RIGHT corner.
-        int row = 0;
-        int col = n - 1;
+        // Treat the 2D matrix as a virtual 1D sorted array
+        int low = 0;
+        int high = n * m - 1;
 
-        // Continue while we are inside the matrix.
-        while (row < m && col >= 0) {
+        // Standard Binary Search
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
 
-            // Target found.
-            if (target == matrix[row][col]) {
+            // Map 1D index back to 2D coordinates
+            int row = mid / m;
+            int col = mid % m;
+
+            // Target found
+            if (matrix[row][col] == target) {
                 return true;
 
-            // Current value is too large.
-            // Move LEFT to find a smaller value.
-            } else if (target < matrix[row][col]) {
-                col--;
+            // Current value is too small, search the right half
+            } else if (matrix[row][col] < target) {
+                low = mid + 1;
 
-            // Current value is too small.
-            // Move DOWN to find a larger value.
+            // Current value is too large, search the left half
             } else {
-                row++;
+                high = mid - 1;
             }
         }
 
@@ -36,64 +43,60 @@ class Solution {
 ## Code Summary
 ==================================================
 
-The matrix has two properties:
+The matrix has the following properties:
 
-1. Every row is sorted from LEFT → RIGHT.
-2. Every column is sorted from TOP → BOTTOM.
+1. Integers in each row are sorted from LEFT → RIGHT.
+2. The first integer of each row is greater than the
+   last integer of the previous row.
 
-Instead of checking every element, we start from
-the TOP-RIGHT corner.
+This means if we unroll the entire matrix row by row,
+it forms a single, strictly ascending 1D array.
+
+Instead of running a 2D traversal, we perform a
+standard BINARY SEARCH over the range:
+
+0  →  (N * M - 1)
 
 Example:
 
-1   4   7
-2   5   8
-3   6   9
+[ 1,  3,  5,  7]
+[10, 11, 16, 20]
+[23, 30, 34, 60]
 
-Start at:
+Virtual 1D Array:
 
-7
-
-
-If target < 7:
-
-Move LEFT.
-
-If target > 7:
-
-Move DOWN.
-
-If target == 7:
-
-Return true.
+Index:  0   1   2   3   4   5   6   7   8   9  10  11
+Value:  1   3   5   7  10  11  16  20  23  30  34  60
 
 
 ==================================================
-## Why TOP-RIGHT?
+## Index Mapping Formula
 ==================================================
 
-The TOP-RIGHT element gives us two choices:
+Given:
 
-        LEFT ←
+Total columns = M
+1D Index = mid
 
-          7
-          ↓
-         DOWN
+To find the (row, col) position in the 2D matrix:
 
-If target is smaller:
-
-LEFT is useful because values decrease.
-
-If target is larger:
-
-DOWN is useful because values increase.
+row = mid / M
+col = mid % M
 
 
-So every step eliminates either:
+Visual:
 
-- an entire column
-OR
-- an entire row.
+        col 0   col 1   col 2   col 3
+row 0 [   0       1       2       3   ]
+row 1 [   4       5       6       7   ]
+row 2 [   8       9      10      11   ]
+
+For mid = 6 and M = 4:
+
+row = 6 / 4 = 1
+col = 6 % 4 = 2
+
+Element = matrix[1][2] = 16
 
 
 ==================================================
@@ -103,77 +106,118 @@ OR
 Input:
 
 matrix = [
-    [1,  4,  7, 11],
-    [2,  5,  8, 12],
-    [3,  6,  9, 16],
-    [10,13,14,17]
+    [1,   3,  5,  7],
+    [10, 11, 16, 20],
+    [23, 30, 34, 60]
 ]
 
-target = 5
+target = 3
+
+Dimensions:
+
+n = 3 (rows)
+m = 4 (cols)
+
+low  = 0
+high = 3 * 4 - 1 = 11
 
 
-Start:
+--- Step 1 ---
 
-row = 0
-col = 3
+low  = 0
+high = 11
+
+mid = 0 + (11 - 0) / 2 = 5
+
+row = 5 / 4 = 1
+col = 5 % 4 = 1
 
 Current:
 
-matrix[0][3] = 11
+matrix[1][1] = 11
 
 
 Compare:
 
-5 < 11
+11 > 3 (target < current)
 
 
 So 11 is too large.
+Eliminate right half.
 
-Move LEFT:
+high = mid - 1 = 4
 
-col = 2
 
+--- Step 2 ---
+
+low  = 0
+high = 4
+
+mid = 0 + (4 - 0) / 2 = 2
+
+row = 2 / 4 = 0
+col = 2 % 4 = 2
 
 Current:
 
-matrix[0][2] = 7
+matrix[0][2] = 5
 
 
 Compare:
 
-5 < 7
+5 > 3 (target < current)
 
 
-Move LEFT:
+So 5 is too large.
+Eliminate right half.
 
-col = 1
+high = mid - 1 = 1
 
+
+--- Step 3 ---
+
+low  = 0
+high = 1
+
+mid = 0 + (1 - 0) / 2 = 0
+
+row = 0 / 4 = 0
+col = 0 % 4 = 0
 
 Current:
 
-matrix[0][1] = 4
+matrix[0][0] = 1
 
 
 Compare:
 
-5 > 4
+1 < 3 (target > current)
 
 
-So 4 is too small.
+So 1 is too small.
+Eliminate left half.
 
-Move DOWN:
+low = mid + 1 = 1
 
-row = 1
 
+--- Step 4 ---
+
+low  = 1
+high = 1
+
+mid = 1 + (1 - 1) / 2 = 1
+
+row = 1 / 4 = 0
+col = 1 % 4 = 1
 
 Current:
 
-matrix[1][1] = 5
+matrix[0][1] = 3
 
 
 Compare:
 
-5 == 5
+3 == 3
 
 
 Return:
@@ -182,142 +226,68 @@ true
 
 
 ==================================================
-## Another Simple Example
-==================================================
-
-target = 13
-
-
-Start:
-
-11
-
-
-13 > 11
-
-Move DOWN.
-
-
-Current:
-
-12
-
-
-13 > 12
-
-Move DOWN.
-
-
-Current:
-
-16
-
-
-13 < 16
-
-Move LEFT.
-
-
-Current:
-
-14
-
-
-13 < 14
-
-Move LEFT.
-
-
-Current:
-
-13
-
-
-Found.
-
-Return true.
-
-
-==================================================
 ## Why Does This Work?
 ==================================================
 
-Suppose current value is:
+Because row `i` ends with a value smaller than the
+start of row `i + 1`, the matrix behaves identically
+to a flattened sorted array of length (N * M).
 
-7
+Standard binary search cuts the search space in half
+at every step:
 
-
-If:
-
-target < 7
-
-
-Because the row is sorted:
-
-values to the RIGHT of 7 are:
-
-8, 9, ...
-
-They are all greater than target.
-
-So we can safely eliminate the entire
-RIGHT side.
-
-Therefore:
-
-col--
+                [ mid ]
+               /       \
+      matrix < target   matrix > target
+            ↓                 ↓
+       Search RIGHT      Search LEFT
+       (low = mid + 1)   (high = mid - 1)
 
 
-If:
+The arithmetic mapping:
 
-target > 7
+mid / M → determines how many full rows fit before mid
+mid % M → determines the offset within the current row
 
-
-Because the column is sorted:
-
-values ABOVE 7 are smaller.
-
-So we can move DOWN.
-
-Therefore:
-
-row++
+This allows O(1) access to any virtual 1D index
+without copying or flattening the matrix in memory.
 
 
 ==================================================
 ## Time Complexity
 ==================================================
 
-At every step we either:
+Total elements in virtual array:
 
-Move LEFT
-OR
-Move DOWN.
+N * M
 
 
-We can move at most:
+Binary search halves the search space each step:
 
-N columns + M rows
+Time = O(log(N * M))
 
 
-Therefore:
+Which is equivalent to:
 
-Time = O(M + N)
+Time = O(log N + log M)
 
 
 ==================================================
 ## Space Complexity
 ==================================================
 
-Only a few variables are used:
+Only pointer variables are allocated:
 
+low
+high
+mid
 row
 col
-m
 n
+m
 
 
-Therefore:
+No extra matrix or array is created:
 
 Space = O(1)
 
@@ -326,29 +296,35 @@ Space = O(1)
 ## Easy Way to Remember
 ==================================================
 
-Start:
+Search Space:
 
-TOP-RIGHT
+0  →  (N * M - 1)
 
 
-Then:
+Coordinate Transform:
 
-target < current
-        ↓
-      LEFT
+row = mid / M
+col = mid % M
 
-target > current
-        ↓
-      DOWN
 
-target == current
-        ↓
-      FOUND
+Binary Search Decision:
+
+target < matrix[row][col]
+          ↓
+     high = mid - 1
+
+target > matrix[row][col]
+          ↓
+     low = mid + 1
+
+target == matrix[row][col]
+          ↓
+        FOUND
 
 
 Pattern:
 
-TOP-RIGHT → LEFT or DOWN
+Flattened Index → (mid / M, mid % M) → Binary Search
 
 ==================================================
 */
