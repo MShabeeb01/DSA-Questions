@@ -2,60 +2,44 @@ import java.util.*;
 
 class Solution {
     public int[] maxSlidingWindow(int[] nums, int k) {
-
         int n = nums.length;
-        int[] res = new int[n - k + 1];
+        List<Integer> result = new ArrayList<>();
+        Deque<Integer> dq = new LinkedList<>();
 
-        // Deque stores indices.
-        // Values in the deque are kept in decreasing order.
-        Deque<Integer> dq = new ArrayDeque<>();
-
-        // --------------------------------------------------
-        // STEP 1: Create the first window
-        // --------------------------------------------------
-
-        for (int i = 0; i < k; i++) {
-
-            // Remove smaller values from the back.
-            while (!dq.isEmpty() &&
-                    nums[dq.peekLast()] <= nums[i]) {
-                dq.pollLast();
+        // Process first k elements
+        dq.addLast(0);
+        for (int i = 1; i < k; i++) {
+            while (!dq.isEmpty() && nums[i] >= nums[dq.getLast()]) {
+                dq.removeLast();
             }
-
-            dq.offerLast(i);
+            dq.addLast(i);
         }
 
-        // Maximum of the first window.
-        res[0] = nums[dq.peekFirst()];
+        result.add(nums[dq.getFirst()]);
 
-        // --------------------------------------------------
-        // STEP 2: Slide the window
-        // --------------------------------------------------
-
+        // Process remaining elements
         for (int i = k; i < n; i++) {
-
-            // Remove elements that are no longer
-            // part of the current window.
-            while (!dq.isEmpty() &&
-                    dq.peekFirst() <= i - k) {
-                dq.pollFirst();
+            // Remove elements out of window
+            if (i - dq.getFirst() >= k) {
+                dq.removeFirst();
             }
 
-            // Remove smaller values because they
-            // can never become the maximum.
-            while (!dq.isEmpty() &&
-                    nums[dq.peekLast()] <= nums[i]) {
-                dq.pollLast();
+            // Remove smaller elements
+            while (!dq.isEmpty() && nums[i] >= nums[dq.getLast()]) {
+                dq.removeLast();
             }
 
-            // Add current index.
-            dq.offerLast(i);
-
-            // Front always contains the maximum.
-            res[i - k + 1] = nums[dq.peekFirst()];
+            dq.addLast(i);
+            result.add(nums[dq.getFirst()]);
         }
 
-        return res;
+        // Convert list to array
+        int[] resArr = new int[result.size()];
+        for (int i = 0; i < result.size(); i++) {
+            resArr[i] = result.get(i);
+        }
+
+        return resArr;
     }
 }
 
@@ -65,65 +49,72 @@ class Solution {
 ==================================================
 
 We need to find the maximum element in every
-window of size k.
+contiguous sliding window of size k moving from
+left to right across an array.
 
 Example:
 
-nums = [1,3,-1,-3,5,3,6,7]
+nums = [1, 3, -1, -3, 5, 3, 6, 7]
 k = 3
 
 Output:
 
-[3,3,5,5,6,7]
+[3, 3, 5, 5, 6, 7]
 
 
 ==================================================
 ## Main Idea
 ==================================================
 
-We use a Deque.
+We use a Monotonic Deque (Double-Ended Queue).
 
-The deque stores INDEXES, not values.
+The deque stores INDEXES of elements, not their values.
 
-The values corresponding to these indexes
-are always maintained in decreasing order.
+The values at these indexes are maintained in strictly
+non-increasing (decreasing) order from front to back:
+
+nums[dq.peekFirst()] >= nums[...] >= nums[dq.peekLast()]
 
 Therefore:
 
-FRONT = Maximum element
+FRONT = Maximum element in the current window
 
 
 ==================================================
-## STEP 1: First Window
+## STEP 1: First Window (Indices 0 to k - 1)
 ==================================================
 
-We first create the window of size k.
+1. Push index 0 into the deque initially:
+   dq.addLast(0)
 
-For every element:
+2. For every next index i from 1 to k - 1:
+   - While the deque is not empty and nums[i] >= nums[dq.getLast()]:
+     remove from the back (dq.removeLast()).
+   - Add index i to the back (dq.addLast(i)).
 
-1. Remove smaller values from the back.
-2. Add the current index.
-
-After the first window is created:
-
-The front of the deque contains
-the maximum element.
-
-So:
-
-res[0] = nums[dq.peekFirst()]
+3. After processing the first k elements:
+   The front index has the largest value in [0 ... k - 1].
+   result.add(nums[dq.getFirst()])
 
 
 ==================================================
-## STEP 2: Slide the Window
+## STEP 2: Slide the Window (Indices k to n - 1)
 ==================================================
 
-For every new element:
+For every new element at index i:
 
-1. Remove elements outside the window.
-2. Remove smaller elements from the back.
-3. Add the current index.
-4. Front = maximum.
+1. Remove elements out of the window:
+   If (i - dq.getFirst() >= k), the element at
+   the front has expired. Remove it with dq.removeFirst().
+
+2. Remove smaller elements from the back:
+   While nums[i] >= nums[dq.getLast()], pop from back.
+
+3. Add current index:
+   dq.addLast(i)
+
+4. Record the window maximum:
+   result.add(nums[dq.getFirst()])
 
 
 ==================================================
@@ -132,204 +123,154 @@ For every new element:
 
 Input:
 
-nums = [1,3,-1,-3,5,3,6,7]
-
+nums = [1, 3, -1, -3, 5, 3, 6, 7]
 k = 3
 
 
 --------------------------------------------------
-### First Window
+### First Window (Indices 0, 1, 2)
 --------------------------------------------------
 
 Window:
-
 [1, 3, -1]
 
-Add 1:
+Initial:
+Add index 0 (val = 1)
+Deque: [0] (vals: [1])
 
-Deque:
+Add index 1 (val = 3):
+3 >= nums[0] (3 >= 1) -> removeLast() (removes index 0)
+Deque: []
+Add index 1 -> Deque: [1] (vals: [3])
 
-[1]
+Add index 2 (val = -1):
+-1 < nums[1] (-1 < 3) -> no removal
+Add index 2 -> Deque: [1, 2] (vals: [3, -1])
 
-
-Add 3:
-
-3 > 1
-
-Remove 1.
-
-Deque:
-
-[3]
-
-
-Add -1:
-
--1 < 3
-
-Deque:
-
-[3, -1]
-
-
-Front = 3
+Front index = 1 -> nums[1] = 3
 
 Result:
-
 [3]
 
 
 --------------------------------------------------
-### Window 2
+### Window 2 (Index 3, val = -3)
 --------------------------------------------------
 
-New element:
+Current window elements:
+[3, -1, -3]  (indices: 1, 2, 3)
 
--3
+1. Check expired:
+   i - dq.getFirst() = 3 - 1 = 2 < 3 -> Not expired.
 
-Current window:
+2. Remove smaller from back:
+   -3 < nums[2] (-3 < -1) -> Keep all.
 
-[3, -1, -3]
+3. Add index 3:
+   Deque: [1, 2, 3] (vals: [3, -1, -3])
 
-
--3 is smaller than -1.
-
-Keep it.
-
-Deque:
-
-[3, -1, -3]
-
-Front = 3
+Front index = 1 -> nums[1] = 3
 
 Result:
-
 [3, 3]
 
 
 --------------------------------------------------
-### Window 3
+### Window 3 (Index 4, val = 5)
 --------------------------------------------------
 
-New element:
+Current window elements:
+[-1, -3, 5]  (indices: 2, 3, 4)
 
-5
+1. Check expired:
+   i - dq.getFirst() = 4 - 1 = 3 >= 3 -> Index 1 expired!
+   removeFirst() -> removes index 1.
+   Deque: [2, 3]
 
-Current window:
+2. Remove smaller from back:
+   5 >= nums[3] (5 >= -3) -> removeLast() (removes index 3)
+   5 >= nums[2] (5 >= -1) -> removeLast() (removes index 2)
+   Deque: []
 
-[-1, -3, 5]
+3. Add index 4:
+   Deque: [4] (vals: [5])
 
-
-5 > -3
-
-Remove -3.
-
-
-5 > -1
-
-Remove -1.
-
-
-Deque:
-
-[5]
-
-Front = 5
+Front index = 4 -> nums[4] = 5
 
 Result:
-
 [3, 3, 5]
 
 
 --------------------------------------------------
-### Window 4
+### Window 4 (Index 5, val = 3)
 --------------------------------------------------
 
-New element:
+Current window elements:
+[-3, 5, 3]  (indices: 3, 4, 5)
 
-3
+1. Check expired:
+   i - dq.getFirst() = 5 - 4 = 1 < 3 -> Not expired.
 
-Current window:
+2. Remove smaller from back:
+   3 < nums[4] (3 < 5) -> Keep 5.
 
-[-3, 5, 3]
+3. Add index 5:
+   Deque: [4, 5] (vals: [5, 3])
 
-
-3 < 5
-
-Keep 5.
-
-Add 3.
-
-Deque:
-
-[5, 3]
-
-Front = 5
+Front index = 4 -> nums[4] = 5
 
 Result:
-
 [3, 3, 5, 5]
 
 
 --------------------------------------------------
-### Window 5
+### Window 5 (Index 6, val = 6)
 --------------------------------------------------
 
-New element:
+Current window elements:
+[5, 3, 6]  (indices: 4, 5, 6)
 
-6
+1. Check expired:
+   i - dq.getFirst() = 6 - 4 = 2 < 3 -> Not expired.
 
-Current window:
+2. Remove smaller from back:
+   6 >= nums[5] (6 >= 3) -> removeLast() (removes index 5)
+   6 >= nums[4] (6 >= 5) -> removeLast() (removes index 4)
+   Deque: []
 
-[5, 3, 6]
+3. Add index 6:
+   Deque: [6] (vals: [6])
 
-
-6 > 3
-
-Remove 3.
-
-
-6 > 5
-
-Remove 5.
-
-
-Deque:
-
-[6]
-
-Front = 6
+Front index = 6 -> nums[6] = 6
 
 Result:
-
 [3, 3, 5, 5, 6]
 
 
 --------------------------------------------------
-### Window 6
+### Window 6 (Index 7, val = 7)
 --------------------------------------------------
 
-New element:
+Current window elements:
+[3, 6, 7]  (indices: 5, 6, 7)
 
-7
+1. Check expired:
+   i - dq.getFirst() = 7 - 6 = 1 < 3 -> Not expired.
 
-Current window:
+2. Remove smaller from back:
+   7 >= nums[6] (7 >= 6) -> removeLast() (removes index 6)
+   Deque: []
 
-[3, 6, 7]
+3. Add index 7:
+   Deque: [7] (vals: [7])
+
+Front index = 7 -> nums[7] = 7
+
+Result:
+[3, 3, 5, 5, 6, 7]
 
 
-7 > 6
-
-Remove 6.
-
-Deque:
-
-[7]
-
-Front = 7
-
-Final:
-
+Final Converted Array:
 [3, 3, 5, 5, 6, 7]
 
 
@@ -337,117 +278,73 @@ Final:
 ## Why Remove Smaller Values?
 ==================================================
 
-Suppose the deque contains:
+If a new element entering the window is greater than
+or equal to an older element inside the deque:
 
-[8, 5]
+nums[i] >= nums[dq.getLast()]
 
-And the new value is:
+The older element is:
+1. Smaller than nums[i]
+2. Older (will expire before nums[i])
 
-10
-
-
-Since:
-
-10 > 5
-
-5 can never be the maximum while 10
-is inside the window.
-
-Also:
-
-10 > 8
-
-So 8 can also be removed.
-
-Deque becomes:
-
-[10]
-
-
-This keeps the deque useful for finding
-the maximum.
+Therefore, it can NEVER be the maximum for this window
+or any future window. We safely discard it from the back.
 
 
 ==================================================
 ## Why Store Indexes?
 ==================================================
 
-We need to know when an element leaves
-the sliding window.
+Storing values alone does not tell us when an element
+falls outside the sliding window.
 
-For example:
+Storing indices allows checking expiration in O(1):
 
-k = 3
-i = 4
-
-Current window:
-
-indexes:
-
-[2, 3, 4]
-
-So index 1 is outside the window.
-
-We can check:
-
-dq.peekFirst() <= i - k
-
-
-If true:
-
-Remove it.
+if (i - dq.getFirst() >= k) {
+    dq.removeFirst();
+}
 
 
 ==================================================
 ## Why Is the Front the Maximum?
 ==================================================
 
-The deque always keeps values in:
+Because elements are maintained in strictly
+non-increasing order:
 
-DECREASING ORDER
+Every time an element is added, all smaller elements
+behind it are evicted.
 
+Hence, the largest valid element of the current window
+is always at:
 
-Example:
-
-[9, 7, 5, 2]
-
-The largest value is always at:
-
-FRONT
-
-
-Therefore:
-
-nums[dq.peekFirst()]
-
-gives the maximum instantly.
+FRONT (dq.getFirst())
 
 
 ==================================================
 ## Time Complexity
 ==================================================
 
-Every element is:
+- Each index from 0 to n - 1 is added to the deque
+  exactly once: O(n)
+- Each index is removed from the deque at most once: O(n)
+- Converting List to array takes: O(n - k + 1)
 
-Added once.
+Total Time Complexity:
 
-Removed at most once.
-
-
-Therefore:
-
-O(N)
+O(n)
 
 
 ==================================================
 ## Space Complexity
 ==================================================
 
-Deque can contain at most N elements.
+- Deque stores at most k elements at any point: O(k)
+- Result list/array holds (n - k + 1) elements: O(n - k + 1)
 
-Therefore:
+Total Auxiliary Space Complexity:
 
-O(N)
+O(k)  (excluding output storage)
 
 
 ==================================================
@@ -456,13 +353,13 @@ O(N)
 
 For every new element:
 
-1. Remove OUTSIDE elements.
-2. Remove SMALLER elements.
-3. ADD current index.
-4. FRONT = MAXIMUM.
+1. EXPIRED: Remove if index is out of window bounds.
+2. SMALLER: Remove elements <= current from back.
+3. ADD: Push current index to back.
+4. RECORD: Front is the maximum.
 
 Remember:
 
-OUTSIDE → SMALLER → ADD → FRONT = MAX
+EXPIRED → SMALLER → ADD → FRONT = MAX
 ==================================================
 */
