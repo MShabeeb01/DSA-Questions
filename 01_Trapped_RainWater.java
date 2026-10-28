@@ -44,24 +44,56 @@ public class ArraysCC {
 }
 
 /*
---------------- QUICK RECALL ---------------
+=============================================================================
+                       VISUAL EXPLANATION (AT END OF CODE)
+=============================================================================
 
-1. Create leftMax[]
-   -> Highest bar from LEFT.
+Input Array: height[] = { 4, 2, 0, 6, 3, 2, 5 }
 
-2. Create rightMax[]
-   -> Highest bar from RIGHT.
+[###] = Solid elevation bar (height[i])
+[ ~ ] = Trapped rainwater unit
 
-3. Water Level
-   -> min(leftMax, rightMax)
+Height
+  6 |                   [###]
+  5 |                   [###]                         [###]
+  4 |    [###]  [ ~ ]   [ ~ ]   [###]                 [###]
+  3 |    [###]  [ ~ ]   [ ~ ]   [###]   [###]  [ ~ ]  [###]
+  2 |    [###]  [###]   [ ~ ]   [###]   [###]  [###]  [###]
+  1 |    [###]  [###]   [ ~ ]   [###]   [###]  [###]  [###]
+  0 +------+------+------+------+------+------+------+---
+Idx:       0      1      2      3       4      5      6
+Bar Ht:    4      2      0      6       3      2      5
 
-4. Trapped Water
-   -> Water Level - Current Height
+-----------------------------------------------------------------------------
+1. ARRAY VALUES AT EACH INDEX:
 
-5. Add all trapped water.
+   Index i      :   0    1    2    3    4    5    6
+   -------------------------------------------------
+   height[i]    :   4    2    0    6    3    2    5
+   leftMax[i]   :   4    4    4    6    6    6    6   (Scan left -> right)
+   rightMax[i]  :   6    6    6    6    5    5    5   (Scan right -> left)
 
-Time Complexity  : O(n)
-Space Complexity : O(n)
+-----------------------------------------------------------------------------
+2. WATER LEVEL & TRAPPED WATER CALCULATION:
 
---------------------------------------------
+   Formula:
+     Water Level   = min(leftMax[i], rightMax[i])
+     Trapped Water = Water Level - height[i]
+
+   - Index 0: min(4, 6) = 4  -->  4 - 4 = 0 units (Edge boundary)
+   - Index 1: min(4, 6) = 4  -->  4 - 2 = 2 units (Trapped by bars 0 and 3)
+   - Index 2: min(4, 6) = 4  -->  4 - 0 = 4 units (Trapped by bars 0 and 3)
+   - Index 3: min(6, 6) = 6  -->  6 - 6 = 0 units (Peak bar, cannot hold water)
+   - Index 4: min(6, 5) = 5  -->  5 - 3 = 2 units (Trapped by bars 3 and 6)
+   - Index 5: min(6, 5) = 5  -->  5 - 2 = 3 units (Trapped by bars 3 and 6)
+   - Index 6: min(6, 5) = 5  -->  5 - 5 = 0 units (Edge boundary)
+
+-----------------------------------------------------------------------------
+3. TOTAL TRAPPED WATER:
+
+   Total = 0 + 2 + 4 + 0 + 2 + 3 + 0 = 11 units
+   
+   Time Complexity  : O(n) -> 3 linear passes through the array
+   Space Complexity : O(n) -> 2 auxiliary arrays of size n
+=============================================================================
 */
