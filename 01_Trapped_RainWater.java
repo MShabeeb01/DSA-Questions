@@ -45,7 +45,7 @@ public class ArraysCC {
 
 /*
 =============================================================================
-                       VISUAL EXPLANATION (AT END OF CODE)
+                       VISUAL EXPLANATION & SUMMARY
 =============================================================================
 
 Input Array: height[] = { 4, 2, 0, 6, 3, 2, 5 }
@@ -89,11 +89,36 @@ Bar Ht:    4      2      0      6       3      2      5
    - Index 6: min(6, 5) = 5  -->  5 - 5 = 0 units (Edge boundary)
 
 -----------------------------------------------------------------------------
-3. TOTAL TRAPPED WATER:
+3. FUNCTION-BY-FUNCTION & COMPONENT SUMMARY:
 
-   Total = 0 + 2 + 4 + 0 + 2 + 3 + 0 = 11 units
-   
-   Time Complexity  : O(n) -> 3 linear passes through the array
-   Space Complexity : O(n) -> 2 auxiliary arrays of size n
+   A. ArraysCC (Class):
+      - Encapsulates the entire program; serves as the namespace.
+
+   B. TrappedRainwater(int height[]) (Core Logic Method):
+      - Purpose: Computes total units of rainwater retained between the bars.
+      - Core Mechanics:
+        1. Allocates auxiliary arrays `leftMax` and `rightMax` of size n.
+        2. Computes the maximum height to the left of each index using
+           prefix maximums: leftMax[i] = max(height[i], leftMax[i - 1]).
+        3. Computes the maximum height to the right of each index using
+           suffix maximums: rightMax[i] = max(height[i], rightMax[i + 1]).
+        4. Calculates bounded water over column i by taking the limiting
+           boundary: min(leftMax[i], rightMax[i]) - height[i].
+        5. Accumulates and returns total trapped water.
+
+   C. main(String args[]) (Execution Entry Point):
+      - Initializes sample input array: {4, 2, 0, 6, 3, 2, 5}.
+      - Passes the input array to TrappedRainwater().
+      - Prints the final calculated result (11) to the console.
+
+-----------------------------------------------------------------------------
+4. COMPLEXITY ANALYSIS:
+
+   - Time Complexity: O(n)
+     Iterates across the array three separate times:
+     (1 pass for leftMax, 1 pass for rightMax, 1 pass for trappedWater).
+
+   - Space Complexity: O(n)
+     Requires 2 additional arrays (leftMax and rightMax), each of size n.
 =============================================================================
 */
