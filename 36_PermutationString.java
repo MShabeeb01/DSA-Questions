@@ -1,291 +1,156 @@
-class Solution { 
-    public boolean checkInclusion(String s1, String s2) { 
- 
-        if (s1.length() > s2.length()) { 
-            return false; 
-        } 
- 
-        int freq[] = new int[26]; 
- 
-        // Store frequency of characters in s1.
-        for (char ch : s1.toCharArray()) { 
-            freq[ch - 'a']++; 
-        } 
- 
-        int left = 0; 
- 
-        // Sliding window over s2.
-        for (int right = 0; right < s2.length(); right++) { 
- 
-            // Remove the current character from frequency.
-            freq[s2.charAt(right) - 'a']--; 
- 
-            // If window becomes bigger than s1,
-            // remove the leftmost character.
-            if (right - left + 1 > s1.length()) { 
-                freq[s2.charAt(left) - 'a']++; 
-                left++; 
-            } 
- 
-            // If all frequencies are zero,
-            // current window is a permutation of s1.
-            if (right - left + 1 == s1.length() && allZero(freq)) { 
-                return true; 
-            } 
-        } 
- 
-        return false; 
-    } 
- 
-    // Check whether all frequency values are zero.
-    private boolean allZero(int[] freq) { 
- 
-        for (int value : freq) { 
-            if (value != 0) { 
-                return false; 
-            } 
-        } 
- 
-        return true; 
-    } 
-} 
- 
-/* 
-================================================== 
-## Code Summary 
-================================================== 
- 
-1. Store the frequency of every character in s1 
-   using a frequency array of size 26. 
- 
-2. Use a sliding window on s2. 
- 
-3. The window size is always equal to s1.length(). 
- 
-4. When a character enters the window, decrease 
-   its frequency. 
- 
-5. When a character leaves the window, increase 
-   its frequency again. 
- 
-6. If all values in freq[] become 0, the current 
-   window contains exactly the same characters as s1. 
- 
-7. Therefore, the current window is a permutation 
-   of s1. 
- 
-================================================== 
-## Iteration 
-================================================== 
- 
+import java.util.*;
+
+class Solution {
+    public boolean checkInclusion(String s1, String s2) {
+        int n1 = s1.length();
+        int n2 = s2.length();
+
+        // If s1 is longer than s2, a permutation of s1 cannot be a substring of s2.
+        if (n1 > n2) return false;
+
+        // Frequency arrays for lowercase English letters ('a' through 'z').
+        int[] count1 = new int[26];
+        int[] count2 = new int[26];
+
+        // Step 1: Initialize the frequencies for s1 and the first window of size n1 in s2.
+        for (int i = 0; i < n1; i++) {
+            count1[s1.charAt(i) - 'a']++;
+            count2[s2.charAt(i) - 'a']++;
+        }
+
+        // Check if the very first window matches.
+        if (Arrays.equals(count1, count2)) return true;
+
+        // Step 2: Slide the window of fixed size n1 across s2.
+        int j = 0; // Pointer to the character leaving the left side of the window
+        for (int i = n1; i < n2; i++) {
+            // Add the new incoming character on the right (index i)
+            count2[s2.charAt(i) - 'a']++;
+
+            // Remove the outgoing character on the left (index j)
+            count2[s2.charAt(j) - 'a']--;
+
+            // If frequencies match, an anagram/permutation is found in this window.
+            if (Arrays.equals(count1, count2)) {
+                return true;
+            }
+
+            j++; // Slide the left boundary forward
+        }
+
+        return false;
+    }
+}
+
+/*
+==================================================
+## Code Summary
+==================================================
+
+1. Base Check:
+   If s1.length() > s2.length(), return false immediately because s2
+   cannot contain any permutation of s1.
+
+2. Frequency Arrays:
+   Create two integer arrays of size 26 (count1, count2) to store
+   character counts for lowercase English letters ('a' to 'z').
+
+3. Initial Window Setup:
+   Count character frequencies of s1 and the first window of s2 (from index 0 to n1 - 1).
+
+4. Compare Initial Window:
+   If count1 equals count2 via Arrays.equals(), return true immediately.
+
+5. Fixed-Size Sliding Window:
+   Slide the window across s2 one character at a time from index n1 to n2 - 1:
+   - Add the new rightmost character: count2[s2.charAt(i) - 'a']++
+   - Remove the leftmost character: count2[s2.charAt(j) - 'a']--
+   - Check if Arrays.equals(count1, count2) is true. If yes, return true.
+   - Increment j to keep window length fixed at n1.
+
+6. If the loop completes without finding a match, return false.
+
+==================================================
+## Step-by-Step Iteration Trace
+==================================================
+
 Input: 
- 
-s1 = "ab" 
-s2 = "eidbaooo" 
- 
-Required window size: 
- 
-s1.length() = 2 
- 
-Initial frequency: 
- 
-a = 1 
-b = 1 
- 
--------------------------------------------------- 
-### right = 0 
--------------------------------------------------- 
- 
-Character: 
- 
-'e' 
- 
-Window: 
- 
-"e" 
- 
-Window size = 1 
- 
-Not enough characters yet. 
- 
--------------------------------------------------- 
-### right = 1 
--------------------------------------------------- 
- 
-Character: 
- 
-'i' 
- 
-Window: 
- 
-"ei" 
- 
-Window size = 2 
- 
-Compare frequencies. 
- 
-"ei" does not contain the same characters 
-as "ab". 
- 
-So: 
- 
-"ei" ❌ 
- 
--------------------------------------------------- 
-### right = 2 
--------------------------------------------------- 
- 
-Character: 
- 
-'d' 
- 
-Window temporarily becomes: 
- 
-"eid" 
- 
-Window size = 3. 
- 
-But required size is 2. 
- 
-So remove the leftmost character 'e'. 
- 
-Window becomes: 
- 
-"id" 
- 
-So: 
- 
-"id" ❌ 
- 
--------------------------------------------------- 
-### right = 3 
--------------------------------------------------- 
- 
-Character: 
- 
-'b' 
- 
-Window temporarily becomes: 
- 
-"idb" 
- 
-Remove the leftmost character 'i'. 
- 
-Window becomes: 
- 
-"db" 
- 
-So: 
- 
-"db" ❌ 
- 
--------------------------------------------------- 
-### right = 4 
--------------------------------------------------- 
- 
-Character: 
- 
-'a' 
- 
-Window temporarily becomes: 
- 
-"dba" 
- 
-Remove the leftmost character 'd'. 
- 
-Window becomes: 
- 
-"ba" 
- 
-Now compare: 
- 
-s1     = "ab" 
-window = "ba" 
- 
-Both contain: 
- 
-a = 1 
-b = 1 
- 
-All values in freq[] are now 0. 
- 
-Therefore: 
- 
-"ba" is a permutation of "ab". 
- 
-Return: 
- 
-true 
- 
-================================================== 
-## Why This Works 
-================================================== 
- 
-A permutation contains exactly the same characters 
-with exactly the same frequencies. 
- 
-For example: 
- 
-"ab" 
-"ba" 
- 
-Both contain: 
- 
-a -> 1 
-b -> 1 
- 
-The order is different, but the frequencies are 
-the same. 
- 
-The frequency array helps us check this efficiently. 
- 
-If every value in freq[] is 0, it means the current 
-window and s1 contain exactly the same characters. 
- 
-================================================== 
-## Why Sliding Window? 
-================================================== 
- 
-We only need to check substrings whose length is 
-equal to s1.length(). 
- 
-Instead of creating every substring separately, 
-we maintain one window. 
- 
-When right moves: 
- 
-A new character enters. 
- 
-When the window becomes too large: 
- 
-The leftmost character leaves. 
- 
-This allows us to process s2 efficiently. 
- 
-================================================== 
-## Time Complexity 
-================================================== 
- 
-O(26 × N) 
- 
-Since there are only 26 lowercase letters, 
-this becomes: 
- 
-O(N) 
- 
-where N is the length of s2. 
- 
-================================================== 
-## Space Complexity 
-================================================== 
- 
-O(26) 
- 
-The frequency array contains only 26 positions. 
- 
-Therefore: 
- 
-O(1) 
- 
-================================================== 
+s1 = "ab"  (n1 = 2)
+s2 = "eidbaooo" (n2 = 8)
+
+Initial Target Frequency for s1 ("ab"):
+count1: ['a': 1, 'b': 1, all others: 0]
+
+--------------------------------------------------
+Initial Window: indices [0, 1] -> "ei"
+--------------------------------------------------
+count2: ['e': 1, 'i': 1]
+Compare count1 == count2? -> NO
+
+--------------------------------------------------
+Sliding Window: (j = left, i = right)
+--------------------------------------------------
+
+Iteration 1: (i = 2, j = 0)
+- In:  s2[2] = 'd' -> count2['d']++
+- Out: s2[0] = 'e' -> count2['e']--
+- Current Window substring [1..2]: "id"
+- count2: ['i': 1, 'd': 1]
+- Match? -> NO
+- j becomes 1
+
+Iteration 2: (i = 3, j = 1)
+- In:  s2[3] = 'b' -> count2['b']++
+- Out: s2[1] = 'i' -> count2['i']--
+- Current Window substring [2..3]: "db"
+- count2: ['d': 1, 'b': 1]
+- Match? -> NO
+- j becomes 2
+
+Iteration 3: (i = 4, j = 2)
+- In:  s2[4] = 'a' -> count2['a']++
+- Out: s2[2] = 'd' -> count2['d']--
+- Current Window substring [3..4]: "ba"
+- count2: ['a': 1, 'b': 1]
+- Match? Arrays.equals(count1, count2) -> YES!
+- Return true immediately.
+
+==================================================
+## Why Does Fixed-Size Sliding Window Work?
+==================================================
+
+A permutation of string s1 has:
+1. The exact same length as s1 (n1).
+2. The exact same character frequencies as s1.
+
+Because the required substring must have length n1, we only need to inspect
+contiguous substrings of length n1 in s2. 
+
+Instead of recomputing the character counts of every window from scratch in O(n1) time,
+we update the counts in O(1) time by adding the incoming character on the right
+and subtracting the outgoing character on the left.
+
+==================================================
+## Time Complexity
+==================================================
+
+O(n1 + 26 * (n2 - n1)) -> O(n2)
+
+Where:
+n1 = s1.length()
+n2 = s2.length()
+
+- Initial window creation takes O(n1) time.
+- Sliding the window runs (n2 - n1) times.
+- Arrays.equals() compares two fixed arrays of size 26, taking O(26) = O(1) operations per slide.
+- Overall time complexity is linear: O(n2).
+
+==================================================
+## Space Complexity
+==================================================
+
+O(1) Auxiliary Space
+
+Because both count1 and count2 are fixed-size arrays of size 26,
+independent of the lengths of s1 and s2.
 */
