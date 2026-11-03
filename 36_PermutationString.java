@@ -72,76 +72,113 @@ class Solution {
 6. If the entire string s2 is scanned without a match, return false.
 
 ==================================================
-## Detailed Tracing Example
+## Detailed Tracing Example (Demonstrating Sliding Window)
 ==================================================
 
 Input:
-s1 = "ab"   (n1 = 2)
-s2 = "baeo" (n2 = 4)
+s1 = "ab"        (n1 = 2)
+s2 = "eidbaooo"  (n2 = 8)
 
-Initial Arrays Before Any Loop:
-All 26 indices (0 to 25) start at 0.
-count1 = [0, 0, 0, 0, ..., 0]
-count2 = [0, 0, 0, 0, ..., 0]
+Target to match (count1 for s1 = "ab"):
+- Index 0 ('a') = 1
+- Index 1 ('b') = 1
+- All other 24 indices = 0
 
 --------------------------------------------------
-PART 1: First Loop (Window Initialization)
-Loop range: i = 0 to 1 (runs n1 = 2 times)
+PART 1: First Loop (Initial Window Setup)
+Loop range: i = 0 to 1 (n1 = 2)
+Window covers s2[0..1] -> "ei"
 --------------------------------------------------
 
 --- Iteration i = 0 ---
-1. Processing s1.charAt(0) = 'a':
-   - Index: 'a' - 'a' = 0
-   - Action: count1[0]++ (0 -> 1)
-   - What count1 stores:
-     Index 0 ('a') = 1 | All other indices = 0
+s1.charAt(0) = 'a' -> count1['a' - 'a']++ -> count1[0] becomes 1
+s2.charAt(0) = 'e' -> count2['e' - 'a']++ -> count2[4] becomes 1
 
-2. Processing s2.charAt(0) = 'b':
-   - Index: 'b' - 'a' = 1
-   - Action: count2[1]++ (0 -> 1)
-   - What count2 stores:
-     Index 1 ('b') = 1 | All other indices = 0
-
-Array States after i = 0:
-Index:      0    1    2    3    4  ...  25
-Letter:    'a'  'b'  'c'  'd'  'e' ...  'z'
--------------------------------------------
-count1:   [ 1,   0,   0,   0,   0, ...   0 ]
-count2:   [ 0,   1,   0,   0,   0, ...   0 ]
-
+State of non-zero counts:
+count1: {'a': 1}
+count2: {'e': 1}
 
 --- Iteration i = 1 ---
-1. Processing s1.charAt(1) = 'b':
-   - Index: 'b' - 'a' = 1
-   - Action: count1[1]++ (0 -> 1)
-   - What count1 stores:
-     Index 0 ('a') = 1 | Index 1 ('b') = 1 | Others = 0
+s1.charAt(1) = 'b' -> count1['b' - 'a']++ -> count1[1] becomes 1
+s2.charAt(1) = 'i' -> count2['i' - 'a']++ -> count2[8] becomes 1
 
-2. Processing s2.charAt(1) = 'a':
-   - Index: 'a' - 'a' = 0
-   - Action: count2[0]++ (0 -> 1)
-   - What count2 stores:
-     Index 0 ('a') = 1 | Index 1 ('b') = 1 | Others = 0
-
-Array States after i = 1:
-Index:      0    1    2    3    4  ...  25
-Letter:    'a'  'b'  'c'  'd'  'e' ...  'z'
--------------------------------------------
-count1:   [ 1,   1,   0,   0,   0, ...   0 ]
-count2:   [ 1,   1,   0,   0,   0, ...   0 ]
-
+State of non-zero counts:
+count1: {'a': 1, 'b': 1}
+count2: {'e': 1, 'i': 1}
 
 --------------------------------------------------
 PART 2: Initial Match Check
 --------------------------------------------------
-Check: Arrays.equals(count1, count2)
+Arrays.equals(count1, count2)
+- count1 has {'a': 1, 'b': 1}
+- count2 has {'e': 1, 'i': 1}
+Match? -> NO (Arrays.equals is false).
+Proceed to Sliding Window loop!
 
-- count1 has: 'a' = 1, 'b' = 1, all others = 0
-- count2 has: 'a' = 1, 'b' = 1, all others = 0
+--------------------------------------------------
+PART 3: Sliding Window Loop (i = n1 to n2 - 1, j starts at 0)
+Window size remains fixed at n1 = 2
+--------------------------------------------------
 
-Both arrays match identically at every index from 0 to 25.
-Result: Returns true immediately.
-(The sliding window loop does not even need to run!)
+--- Slide 1: i = 2, j = 0 ---
+Incoming char on right : s2[2] = 'd' (index 'd' - 'a' = 3)
+Outgoing char on left  : s2[0] = 'e' (index 'e' - 'a' = 4)
+
+Actions:
+- count2[3]++ ('d' count increases from 0 -> 1)
+- count2[4]-- ('e' count decreases from 1 -> 0)
+
+Current Window in s2 [indices 1..2]: "id"
+What count1 stores: {'a': 1, 'b': 1}
+What count2 stores: {'d': 1, 'i': 1}
+
+Check Arrays.equals(count1, count2):
+- count1 has 'a' and 'b'
+- count2 has 'd' and 'i'
+Match? -> NO
+
+Update:
+- j increments to 1
+
+--- Slide 2: i = 3, j = 1 ---
+Incoming char on right : s2[3] = 'b' (index 'b' - 'a' = 1)
+Outgoing char on left  : s2[1] = 'i' (index 'i' - 'a' = 8)
+
+Actions:
+- count2[1]++ ('b' count increases from 0 -> 1)
+- count2[8]-- ('i' count decreases from 1 -> 0)
+
+Current Window in s2 [indices 2..3]: "db"
+What count1 stores: {'a': 1, 'b': 1}
+What count2 stores: {'b': 1, 'd': 1}
+
+Check Arrays.equals(count1, count2):
+- count1 has 'a' and 'b'
+- count2 has 'b' and 'd'
+Match? -> NO
+
+Update:
+- j increments to 2
+
+--- Slide 3: i = 4, j = 2 ---
+Incoming char on right : s2[4] = 'a' (index 'a' - 'a' = 0)
+Outgoing char on left  : s2[2] = 'd' (index 'd' - 'a' = 3)
+
+Actions:
+- count2[0]++ ('a' count increases from 0 -> 1)
+- count2[3]-- ('d' count decreases from 1 -> 0)
+
+Current Window in s2 [indices 3..4]: "ba"
+What count1 stores: {'a': 1, 'b': 1}
+What count2 stores: {'a': 1, 'b': 1}
+
+Check Arrays.equals(count1, count2):
+- count1 index 0 ('a') = 1, index 1 ('b') = 1, all others 0
+- count2 index 0 ('a') = 1, index 1 ('b') = 1, all others 0
+Match? -> YES! Both arrays match identically.
+
+Result:
+Return true immediately.
 
 ==================================================
 ## Why Does Fixed-Size Sliding Window Work?
