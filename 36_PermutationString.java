@@ -5,14 +5,14 @@ class Solution {
         int n1 = s1.length();
         int n2 = s2.length();
 
-        // If s1 is longer than s2, a permutation of s1 cannot be a substring of s2.
+        // If s1 is longer than s2, a permutation of s1 cannot exist in s2.
         if (n1 > n2) return false;
 
         // Frequency arrays for lowercase English letters ('a' through 'z').
         int[] count1 = new int[26];
         int[] count2 = new int[26];
 
-        // Step 1: Initialize the frequencies for s1 and the first window of size n1 in s2.
+        // Step 1: Initialize frequencies for s1 and the first window of size n1 in s2.
         for (int i = 0; i < n1; i++) {
             count1[s1.charAt(i) - 'a']++;
             count2[s2.charAt(i) - 'a']++;
@@ -21,8 +21,8 @@ class Solution {
         // Check if the very first window matches.
         if (Arrays.equals(count1, count2)) return true;
 
-        // Step 2: Slide the window of fixed size n1 across s2.
-        int j = 0; // Pointer to the character leaving the left side of the window
+        // Step 2: Slide the fixed-size window of length n1 across s2.
+        int j = 0; // Left boundary pointer (outgoing character)
         for (int i = n1; i < n2; i++) {
             // Add the new incoming character on the right (index i)
             count2[s2.charAt(i) - 'a']++;
@@ -30,12 +30,12 @@ class Solution {
             // Remove the outgoing character on the left (index j)
             count2[s2.charAt(j) - 'a']--;
 
-            // If frequencies match, an anagram/permutation is found in this window.
+            // If frequencies match, a valid permutation is found.
             if (Arrays.equals(count1, count2)) {
                 return true;
             }
 
-            j++; // Slide the left boundary forward
+            j++; // Advance the left boundary
         }
 
         return false;
@@ -49,86 +49,112 @@ class Solution {
 
 1. Base Check:
    If s1.length() > s2.length(), return false immediately because s2
-   cannot contain any permutation of s1.
+   is too short to contain any permutation of s1.
 
 2. Frequency Arrays:
-   Create two integer arrays of size 26 (count1, count2) to store
-   character counts for lowercase English letters ('a' to 'z').
+   Create two integer arrays of size 26 (count1, count2) representing 
+   frequencies for characters 'a' to 'z'.
 
-3. Initial Window Setup:
-   Count character frequencies of s1 and the first window of s2 (from index 0 to n1 - 1).
+3. First Window Initialization:
+   Count the frequencies of all characters in s1 and the first n1 characters
+   of s2 (indices 0 to n1 - 1) simultaneously.
 
 4. Compare Initial Window:
-   If count1 equals count2 via Arrays.equals(), return true immediately.
+   If Arrays.equals(count1, count2) is true, return true right away.
 
 5. Fixed-Size Sliding Window:
-   Slide the window across s2 one character at a time from index n1 to n2 - 1:
-   - Add the new rightmost character: count2[s2.charAt(i) - 'a']++
-   - Remove the leftmost character: count2[s2.charAt(j) - 'a']--
-   - Check if Arrays.equals(count1, count2) is true. If yes, return true.
-   - Increment j to keep window length fixed at n1.
+   Slide across s2 from index n1 to n2 - 1:
+   - Include incoming character at index i: count2[s2.charAt(i) - 'a']++
+   - Exclude outgoing character at index j: count2[s2.charAt(j) - 'a']--
+   - Check if Arrays.equals(count1, count2) is true -> return true.
+   - Advance left pointer j by 1.
 
-6. If the loop completes without finding a match, return false.
+6. If the entire string s2 is scanned without a match, return false.
 
 ==================================================
-## Step-by-Step Iteration Trace
+## Detailed Tracing Example
 ==================================================
 
-Input: 
-s1 = "ab"  (n1 = 2)
-s2 = "eidbaooo" (n2 = 8)
+Input:
+s1 = "ab"   (n1 = 2)
+s2 = "baeo" (n2 = 4)
 
-Initial Target Frequency for s1 ("ab"):
-count1: ['a': 1, 'b': 1, all others: 0]
-
---------------------------------------------------
-Initial Window: indices [0, 1] -> "ei"
---------------------------------------------------
-count2: ['e': 1, 'i': 1]
-Compare count1 == count2? -> NO
+Initial Arrays Before Any Loop:
+All 26 indices (0 to 25) start at 0.
+count1 = [0, 0, 0, 0, ..., 0]
+count2 = [0, 0, 0, 0, ..., 0]
 
 --------------------------------------------------
-Sliding Window: (j = left, i = right)
+PART 1: First Loop (Window Initialization)
+Loop range: i = 0 to 1 (runs n1 = 2 times)
 --------------------------------------------------
 
-Iteration 1: (i = 2, j = 0)
-- In:  s2[2] = 'd' -> count2['d']++
-- Out: s2[0] = 'e' -> count2['e']--
-- Current Window substring [1..2]: "id"
-- count2: ['i': 1, 'd': 1]
-- Match? -> NO
-- j becomes 1
+--- Iteration i = 0 ---
+1. Processing s1.charAt(0) = 'a':
+   - Index: 'a' - 'a' = 0
+   - Action: count1[0]++ (0 -> 1)
+   - What count1 stores:
+     Index 0 ('a') = 1 | All other indices = 0
 
-Iteration 2: (i = 3, j = 1)
-- In:  s2[3] = 'b' -> count2['b']++
-- Out: s2[1] = 'i' -> count2['i']--
-- Current Window substring [2..3]: "db"
-- count2: ['d': 1, 'b': 1]
-- Match? -> NO
-- j becomes 2
+2. Processing s2.charAt(0) = 'b':
+   - Index: 'b' - 'a' = 1
+   - Action: count2[1]++ (0 -> 1)
+   - What count2 stores:
+     Index 1 ('b') = 1 | All other indices = 0
 
-Iteration 3: (i = 4, j = 2)
-- In:  s2[4] = 'a' -> count2['a']++
-- Out: s2[2] = 'd' -> count2['d']--
-- Current Window substring [3..4]: "ba"
-- count2: ['a': 1, 'b': 1]
-- Match? Arrays.equals(count1, count2) -> YES!
-- Return true immediately.
+Array States after i = 0:
+Index:      0    1    2    3    4  ...  25
+Letter:    'a'  'b'  'c'  'd'  'e' ...  'z'
+-------------------------------------------
+count1:   [ 1,   0,   0,   0,   0, ...   0 ]
+count2:   [ 0,   1,   0,   0,   0, ...   0 ]
+
+
+--- Iteration i = 1 ---
+1. Processing s1.charAt(1) = 'b':
+   - Index: 'b' - 'a' = 1
+   - Action: count1[1]++ (0 -> 1)
+   - What count1 stores:
+     Index 0 ('a') = 1 | Index 1 ('b') = 1 | Others = 0
+
+2. Processing s2.charAt(1) = 'a':
+   - Index: 'a' - 'a' = 0
+   - Action: count2[0]++ (0 -> 1)
+   - What count2 stores:
+     Index 0 ('a') = 1 | Index 1 ('b') = 1 | Others = 0
+
+Array States after i = 1:
+Index:      0    1    2    3    4  ...  25
+Letter:    'a'  'b'  'c'  'd'  'e' ...  'z'
+-------------------------------------------
+count1:   [ 1,   1,   0,   0,   0, ...   0 ]
+count2:   [ 1,   1,   0,   0,   0, ...   0 ]
+
+
+--------------------------------------------------
+PART 2: Initial Match Check
+--------------------------------------------------
+Check: Arrays.equals(count1, count2)
+
+- count1 has: 'a' = 1, 'b' = 1, all others = 0
+- count2 has: 'a' = 1, 'b' = 1, all others = 0
+
+Both arrays match identically at every index from 0 to 25.
+Result: Returns true immediately.
+(The sliding window loop does not even need to run!)
 
 ==================================================
 ## Why Does Fixed-Size Sliding Window Work?
 ==================================================
 
-A permutation of string s1 has:
-1. The exact same length as s1 (n1).
-2. The exact same character frequencies as s1.
+1. Every permutation of s1 has the exact same length (n1) and the 
+   exact same character frequency counts as s1.
 
-Because the required substring must have length n1, we only need to inspect
-contiguous substrings of length n1 in s2. 
+2. Therefore, any valid permutation must occupy a contiguous block 
+   of exactly length n1 inside s2.
 
-Instead of recomputing the character counts of every window from scratch in O(n1) time,
-we update the counts in O(1) time by adding the incoming character on the right
-and subtracting the outgoing character on the left.
+3. By maintaining frequency arrays of size 26 and updating only the 
+   entering and exiting characters, each window slide runs in O(1) time.
 
 ==================================================
 ## Time Complexity
@@ -140,9 +166,9 @@ Where:
 n1 = s1.length()
 n2 = s2.length()
 
-- Initial window creation takes O(n1) time.
-- Sliding the window runs (n2 - n1) times.
-- Arrays.equals() compares two fixed arrays of size 26, taking O(26) = O(1) operations per slide.
+- Initial loop runs n1 times to build count1 and first window of count2: O(n1).
+- Sliding window shifts (n2 - n1) times.
+- Arrays.equals() compares 26 elements: O(26) = O(1) constant time per shift.
 - Overall time complexity is linear: O(n2).
 
 ==================================================
@@ -151,6 +177,6 @@ n2 = s2.length()
 
 O(1) Auxiliary Space
 
-Because both count1 and count2 are fixed-size arrays of size 26,
-independent of the lengths of s1 and s2.
+The two frequency arrays count1 and count2 are always fixed at size 26, 
+independent of the input lengths n1 and n2.
 */
