@@ -1,167 +1,168 @@
-import java.util.Arrays;
-
 class Solution {
     public String longestCommonPrefix(String[] strs) {
-        // Base condition
-        if (strs == null || strs.length == 0) {
+        // Base edge case: If the input array is empty, no common prefix exists.
+        if (strs.length == 0)
             return "";
-        }
 
-        StringBuilder result = new StringBuilder();
+        // Assume the entire first word is the common prefix candidate.
+        String prefix = strs[0];
 
-        // Sort the array lexicographically
-        Arrays.sort(strs);
+        // Compare the candidate prefix against every subsequent word.
+        for (int i = 1; i < strs.length; i++) {
+            // Trim the prefix character-by-character from the back until strs[i] starts with it.
+            while (!strs[i].startsWith(prefix)) {
+                prefix = prefix.substring(0, prefix.length() - 1);
 
-        // Get the first and last strings
-        char[] first = strs[0].toCharArray();
-        char[] last = strs[strs.length - 1].toCharArray();
-
-        // Start comparing
-        for (int i = 0; i < first.length && i < last.length; i++) {
-            if (first[i] != last[i]) {
-                break;
+                // Early exit: If the prefix shrinks down to nothing, no common prefix exists.
+                if (prefix.isEmpty())
+                    return "";
             }
-            result.append(first[i]);
         }
 
-        return result.toString();
+        return prefix;
     }
 }
 
-/* 
-==================================================
+/*
+========================================================================================
 ## Code Summary
-==================================================
+========================================================================================
 
-1. Check if the input array is empty or null. If so, return "".
+1. Base Edge Check:
+   If `strs` has length 0, return `""` immediately.
 
-2. Sort the array of strings lexicographically.
+2. Candidate Initialization:
+   Set `prefix = strs[0]`. The longest common prefix of all words can never be longer 
+   than the first word itself.
 
-3. Extract the first and last strings in the sorted array.
+3. Horizontal Scanning Loop:
+   Iterate from index `1` to `strs.length - 1`:
+   - While the current string `strs[i]` does not start with `prefix`:
+     - Shorten `prefix` by cutting off its last character: 
+       `prefix = prefix.substring(0, prefix.length() - 1)`
+     - If `prefix` becomes empty (`""`), return `""` immediately (early termination).
 
-4. Compare characters of the first and last strings index by index.
+4. Return Result:
+   Once all strings have been processed against the trimmed candidate, return `prefix`.
 
-5. Append matching characters to `result`. Stop when characters differ.
-
-6. Return `result` as the longest common prefix.
-
-==================================================
-## Iteration
-==================================================
+========================================================================================
+## Detailed Visual Step-by-Step Trace
+========================================================================================
 
 Input:
+  strs = ["flower", "flow", "flight"]
+  strs.length = 3
 
-strs = ["club", "clap", "clove"]
+Initial State:
+  prefix = strs[0] = "flower"
 
---------------------------------------------------
-### Step 1: Sorting
---------------------------------------------------
+----------------------------------------------------------------------------------------
+ITERATION 1: i = 1 (Comparing against strs[1] = "flow")
+----------------------------------------------------------------------------------------
+Target word: "flow"
+Current prefix: "flower"
 
-Sorted array:
+- Check: "flow".startsWith("flower")?
+  -> FALSE ("flower" is longer than "flow")
+  Action: Trim last character ('r')
+  prefix = "flower".substring(0, 5) => "flowe"
+  prefix.isEmpty()? -> false
 
-strs = ["clap", "clove", "club"]
+- Check: "flow".startsWith("flowe")?
+  -> FALSE
+  Action: Trim last character ('e')
+  prefix = "flowe".substring(0, 4) => "flow"
+  prefix.isEmpty()? -> false
 
-first = "clap"
-last  = "club"
+- Check: "flow".startsWith("flow")?
+  -> TRUE!
+  Inner while-loop terminates.
 
---------------------------------------------------
-### Iteration 1
---------------------------------------------------
+End of Iteration 1:
+  prefix is now: "flow"
 
-i = 0
+----------------------------------------------------------------------------------------
+ITERATION 2: i = 2 (Comparing against strs[2] = "flight")
+----------------------------------------------------------------------------------------
+Target word: "flight"
+Current prefix: "flow"
 
-first[0] = 'c'
-last[0]  = 'c'
+- Check: "flight".startsWith("flow")?
+  -> FALSE (characters at index 2 mismatch: 'o' vs 'i')
+  Action: Trim last character ('w')
+  prefix = "flow".substring(0, 3) => "flo"
+  prefix.isEmpty()? -> false
 
-Characters match → append 'c'
+- Check: "flight".startsWith("flo")?
+  -> FALSE (characters at index 2 mismatch: 'o' vs 'i')
+  Action: Trim last character ('o')
+  prefix = "flo".substring(0, 2) => "fl"
+  prefix.isEmpty()? -> false
 
-result = "c"
+- Check: "flight".startsWith("fl")?
+  -> TRUE!
+  Inner while-loop terminates.
 
---------------------------------------------------
-### Iteration 2
---------------------------------------------------
+End of Iteration 2:
+  prefix is now: "fl"
 
-i = 1
+----------------------------------------------------------------------------------------
+LOOP TERMINATION & RETURN
+----------------------------------------------------------------------------------------
+Outer loop finishes (i reaches strs.length = 3).
+Final return value: "fl"
 
-first[1] = 'l'
-last[1]  = 'l'
+========================================================================================
+## Variable State Summary Table
+========================================================================================
 
-Characters match → append 'l'
+| Step / Action                     | i  | strs[i]   | prefix Before Action | startsWith? | prefix After Action |
+|:----------------------------------|:---|:----------|:---------------------|:------------|:--------------------|
+| Initialize                        | -  | -         | -                    | -           | "flower"            |
+| i = 1 (Cut 'r')                   | 1  | "flow"    | "flower"             | false       | "flowe"             |
+| i = 1 (Cut 'e')                   | 1  | "flow"    | "flowe"              | false       | "flow"              |
+| i = 1 (Match)                     | 1  | "flow"    | "flow"               | true        | "flow"              |
+| i = 2 (Cut 'w')                   | 2  | "flight"  | "flow"               | false       | "flo"               |
+| i = 2 (Cut 'o')                   | 2  | "flight"  | "flo"                | false       | "fl"                |
+| i = 2 (Match)                     | 2  | "flight"  | "fl"                 | true        | "fl"                |
+| Return                            | -  | -         | -                    | -           | "fl"                |
 
-result = "cl"
+========================================================================================
+## Why Does Horizontal Scanning Work?
+========================================================================================
 
---------------------------------------------------
-### Iteration 3
---------------------------------------------------
+Associative Property:
+  LCP(S1, S2, S3) = LCP(LCP(S1, S2), S3)
 
-i = 2
+Finding the common prefix of the entire array can be done incrementally:
+1. Find the common prefix between the first two words: `P = LCP(S1, S2)`.
+2. The global prefix can never be longer than `P`.
+3. Compare `P` with the third word: `P = LCP(P, S3)`.
+4. Continue until all words are checked or `P` becomes empty.
 
-first[2] = 'a'
-last[2]  = 'u'
-
-Characters do not match → break loop
-
---------------------------------------------------
-## Final Result
---------------------------------------------------
-
-Common Prefix:
-
-"cl"
-
-Return:
-
-"cl"
-
-==================================================
-## Important Point
-==================================================
-
-If there is no common prefix between the first and
-last strings, the loop terminates immediately at index 0.
-
-Example:
-
-["dog", "racecar", "car"]
-
-Sorted:
-
-["car", "dog", "racecar"]
-
-first = "car", last = "racecar"
-'c' != 'r' → returns ""
-
-==================================================
-## Why This Works
-==================================================
-
-Lexicographical sorting places the two strings with
-the maximum difference at the very ends of the array.
-
-Any prefix common to both the first and last strings
-is guaranteed to be common across all intermediate strings.
-
-==================================================
+========================================================================================
 ## Time Complexity
-==================================================
+========================================================================================
 
-O(N * M * log N)
+O(S)
 
 Where:
-- N is the number of strings
-- M is the maximum length of a string
+  N = number of strings in strs
+  M = length of the shortest/first string
+  S = total sum of all characters across all strings
 
-Sorting takes O(N * log N * M) comparisons, and the
-prefix scan takes O(M).
+- Worst Case: All strings are identical or share a very long prefix. Every character
+  comparison in `startsWith` runs through length M across all N words: O(N * M) = O(S).
+- Best Case: strs[1] shares no characters with strs[0] (e.g., ["dog", "racecar"]).
+  `prefix` rapidly trims down to "" in O(M) time, terminating on the first iteration.
 
-==================================================
+========================================================================================
 ## Space Complexity
-==================================================
+========================================================================================
 
-O(M)
+O(1) Auxiliary Space (ignoring string creation overhead) / O(M) in Java heap
 
-We allocate character arrays and a StringBuilder to
-store the characters of the prefix.
-
-==================================================
+- The algorithm only uses a single pointer `i` and variable `prefix`.
+- In Java, `substring()` allocates a new String on each trim step (taking up to O(M) 
+  temporary heap memory), but no auxiliary data structures (like arrays or maps) are used.
 */
