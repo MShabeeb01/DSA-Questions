@@ -141,11 +141,15 @@ Step 11 (i = 2):
 ================================================================================
 PART 4: TIME & SPACE COMPLEXITY
 ================================================================================
-- **Time Complexity: $O(N \cdot 2^N)$**
-  - There are $2^{N-1}$ possible ways to partition a string of length $N$. For each partition configuration, checking if substrings are palindromes takes linear time ($O(N)$).
-- **Space Complexity: $O(N)$**
-  - The maximum depth of the recursion stack is $N$ (when every character is its own partition), and the working list holds at most $N$ elements at any moment.
-
+- **Time Complexity: O(N * 2^N)**
+  - Why? There are 2^(N-1) possible ways to partition a string of length N. For 
+    every partition path we explore, checking if the substrings are palindromes 
+    takes O(N) time. Multiplying the number of paths by the check time gives 
+    O(N * 2^N).
+- **Space Complexity: O(N)**
+  - Why? The maximum height of the recursion stack is N (when every character 
+    is a separate partition), and our working list stores at most N elements 
+    at any time.
 ================================================================================
 PART 5: MOST PROBABLE INTERVIEW QUESTIONS
 ================================================================================
