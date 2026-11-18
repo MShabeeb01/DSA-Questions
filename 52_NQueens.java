@@ -1,53 +1,42 @@
-import java.util.ArrayList; // Import ArrayList class
-import java.util.Arrays;    // Import Arrays class
-import java.util.List;      // Import List interface
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-class Solution { // LeetCode 51: N-Queens
+class Solution {
 
-    // Helper function to check if placing a queen at board[row][col] is safe
     public boolean isSafe(char[][] board, int row, int col, int n) {
-        // 1. Check vertical column upward
+        // Check column upward
         for (int i = 0; i < row; i++) {
-            if (board[i][col] == 'Q') {
-                return false;
-            }
+            if (board[i][col] == 'Q') return false;
         }
-
-        // 2. Check upper-left diagonal
+        // Check upper-left diagonal
         for (int i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
-            if (board[i][j] == 'Q') {
-                return false;
-            }
+            if (board[i][j] == 'Q') return false;
         }
-
-        // 3. Check upper-right diagonal
+        // Check upper-right diagonal
         for (int i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++) {
-            if (board[i][j] == 'Q') {
-                return false;
-            }
+            if (board[i][j] == 'Q') return false;
         }
-
         return true;
     }
 
-    // Recursive helper to place queens row by row
     public void nQueens(char[][] board, int row, int n, List<List<String>> ans) {
-        // Base Case: All n queens are placed safely across rows 0 to n-1
+        // Base case: all queens are safely placed
         if (row == n) {
             List<String> currentBoard = new ArrayList<>();
             for (int i = 0; i < n; i++) {
-                currentBoard.add(new String(board[i])); // Convert char row to String
+                currentBoard.add(new String(board[i]));
             }
-            ans.add(currentBoard); // Add valid board configuration to answer
+            ans.add(currentBoard);
             return;
         }
 
-        // Try placing the queen in each column of the current row
+        // Try placing queen in each column of the current row
         for (int j = 0; j < n; j++) {
             if (isSafe(board, row, j, n)) {
-                board[row][j] = 'Q';              // 1. DO: Place queen
+                board[row][j] = 'Q';              // 1. ADD: Place queen choice
                 nQueens(board, row + 1, n, ans);  // 2. RECURSE: Move to next row
-                board[row][j] = '.';              // 3. UNDO (Backtrack): Reset cell
+                board[row][j] = '.';              // 3. DELETE / BACKTRACK: Reset cell back to empty
             }
         }
     }
@@ -55,25 +44,20 @@ class Solution { // LeetCode 51: N-Queens
     public List<List<String>> solveNQueens(int n) {
         List<List<String>> ans = new ArrayList<>();
         char[][] board = new char[n][n];
-
-        // Initialize empty chessboard with '.'
         for (int i = 0; i < n; i++) {
             Arrays.fill(board[i], '.');
         }
-
-        nQueens(board, 0, n, ans); // Start from row 0
+        nQueens(board, 0, n, ans);
         return ans;
     }
 
-    public static void main(String[] args) { // Driver function
+    public static void main(String[] args) {
         Solution solver = new Solution();
         int n = 4;
-
         List<List<String>> solutions = solver.solveNQueens(n);
-
-        System.out.println("Total Distinct Solutions for " + n + "-Queens: " + solutions.size());
+        System.out.println("Total Solutions: " + solutions.size());
         for (List<String> board : solutions) {
-            System.out.println("--- Solution ---");
+            System.out.println("--- Board ---");
             for (String row : board) {
                 System.out.println(row);
             }
@@ -82,79 +66,115 @@ class Solution { // LeetCode 51: N-Queens
 }
 
 /*
-==================== SUMMARY ====================
+================================================================================
+PART 2: SUMMARY OF THE APPROACH
+================================================================================
+We use a **Recursion and Backtracking** strategy row-by-row:
+1. We place exactly one queen per row, which guarantees no two queens share the same row.
+2. For the current row, we loop through every column and check if it's safe using `isSafe()`.
+3. **If safe (Addition):** We place the queen (`'Q'`) and move recursively to the next row.
+4. **If it leads to a dead end (Deletion / Backtracking):** We undo our choice by resetting the cell back to an empty space (`'.'`), allowing us to try the next column option.
+5. When we successfully reach row `n`, we capture a picture of the board and save it to our answers list.
 
-Approach:
-1. Backtrack row-by-row: Place exactly one queen per row, guaranteeing no two queens share a row.
-2. For the current row, try placing the queen in every column `j` from 0 to n - 1.
-3. Use `isSafe(board, row, col, n)` to verify:
-   - No queen exists directly above in the same column.
-   - No queen exists in the top-left diagonal.
-   - No queen exists in the top-right diagonal.
-   (No need to check rows below, as they are not populated yet).
-4. If safe:
-   - Place queen (`board[row][j] = 'Q'`).
-   - Recurse to place next queen at `row + 1`.
-   - Backtrack by clearing the cell (`board[row][j] = '.'`).
-5. Base Case: When `row == n`, a full valid board has been formed; format and store it.
+================================================================================
+PART 3: STEP-BY-STEP ITERATION WITH VISUAL REPRESENTATION (Example: n = 4)
+================================================================================
 
--------------------------------------------------
+Let's trace the execution steps and how modifications happen on our 2D grid matrix:
 
-Recursion & Backtracking Tree Breakdown (n = 4)
+--- INITIAL CALL: nQueens(board, row = 0, n = 4) ---
 
-Notation: Q(row, col)
+Step 1: Row = 0, Column = 0
+- Check `isSafe(board, 0, 0)` -> YES.
+- **ADDITION:** Place queen at `board[0][0] = 'Q'`.
+- Board State:
+  Q . . .
+  . . . .
+  . . . .
+  . . . .
+- Recurse: `nQueens(board, row = 1, n = 4)`
 
-                         Row 0: Try placing Q
-             /               \              \             \
-         Q(0,0)             Q(0,1)         Q(0,2)        Q(0,3)
-         /   \              /    \
-     Q(1,2)  Q(1,3)     Q(1,3)   ...
-       |       |          |
-     Q(2,x)  Q(2,1)     Q(2,0)
-    (Blocked)  |          |
-             Q(3,x)     Q(3,2)
-            (Blocked)     |
-                        Row 4 == n (VALID SOLUTION FOUND!)
+   --- Inside Row = 1 ---
+   Step 2: Column = 0 and Column = 1
+   - `isSafe(board, 1, 0)` -> NO (Same column as Q at [0,0]).
+   - `isSafe(board, 1, 1)` -> NO (Diagonal attack from Q at [0,0]).
+   
+   Step 3: Column = 2
+   - `isSafe(board, 1, 2)` -> YES.
+   - **ADDITION:** Place queen at `board[1][2] = 'Q'`.
+   - Board State:
+     Q . . .
+     . . Q .
+     . . . .
+     . . . .
+   - Recurse: `nQueens(board, row = 2, n = 4)`
 
--------------------------------------------------
+      --- Inside Row = 2 ---
+      Step 4: Check columns 0, 1, 2, 3 for Row 2...
+      - All columns are blocked by attacking threats from existing queens!
+      - Loop finishes without any safe spot. Return back to Row 1.
 
-Step-by-Step Backtracking Trace (First Valid Solution for n = 4)
+   Step 5: Backtracking & Deletion from Row 1
+   - Back in Row 1, we hit the line: `board[row][j] = '.'`.
+   - **DELETION / RESET VISUAL:** We remove the queen from `board[1][2]` and restore it to `'.'`.
+   - Board State after deletion:
+     Q . . .
+     . . . .
+     . . . .
+     . . . .
+   - Loop in Row 1 continues to Column = 3.
 
-Board Dimension: 4x4
+   Step 6: Column = 3 in Row 1
+   - `isSafe(board, 1, 3)` -> YES.
+   - **ADDITION:** Place queen at `board[1][3] = 'Q'`.
+   - Board State:
+     Q . . .
+     . . . Q
+     . . . .
+     . . . .
+   - Recurse: `nQueens(board, row = 2, n = 4)`
 
----------------------------------------------------------------------------------------------------------
-Step | Row | Col | Safe? | Action / Transition                  | Board State Preview
----------------------------------------------------------------------------------------------------------
-1    | 0   | 0   | Yes   | Place Q at (0,0), Recurse row 1      | Q . . .
-2    | 1   | 0,1 | No    | Blocked (col / diagonal attack)      | Q . . .
-3    | 1   | 2   | Yes   | Place Q at (1,2), Recurse row 2      | Q . . . / . . Q .
-4    | 2   | 0-3 | No    | All cols blocked -> Backtrack row 1  | Q . . . / . . . .
-5    | 1   | 3   | Yes   | Place Q at (1,3), Recurse row 2      | Q . . . / . . . Q
-6    | 2   | 1   | Yes   | Place Q at (2,1), Recurse row 3      | Q . . . / . . . Q / . Q . .
-7    | 3   | 0-3 | No    | All cols blocked -> Backtrack to (0,0)| . . . .
-8    | 0   | 1   | Yes   | Place Q at (0,1), Recurse row 1      | . Q . .
-9    | 1   | 3   | Yes   | Place Q at (1,3), Recurse row 2      | . Q . . / . . . Q
-10   | 2   | 0   | Yes   | Place Q at (2,0), Recurse row 3      | . Q . . / . . . Q / Q . . .
-11   | 3   | 2   | Yes   | Place Q at (3,2), Recurse row 4      | . Q . . / . . . Q / Q . . . / . . Q .
-12   | 4   | -   | -     | Base Case: row == 4 -> SAVE SOLUTION | [Solution 1 Added]
----------------------------------------------------------------------------------------------------------
+      --- Inside Row = 2 ---
+      Step 7: Column = 1
+      - `isSafe(board, 2, 1)` -> YES.
+      - **ADDITION:** Place queen at `board[2][1] = 'Q'`.
+      - Board State:
+        Q . . .
+        . . . Q
+        . Q . .
+        . . . .
+      - Recurse: `nQueens(board, row = 3, n = 4)`
 
-Output for n = 4:
-Total Distinct Solutions for 4-Queens: 2
---- Solution ---
-. Q . .
-. . . Q
-Q . . .
-. . Q .
---- Solution ---
-. . Q .
-Q . . .
-. . . Q
-. Q . .
+         --- Inside Row = 3 ---
+         Step 8: Check columns 0, 1, 2, 3 for Row 3...
+         - All columns are blocked! No safe spot available. Return back.
 
-Complexity:
-- Time Complexity : O(n!) — The first queen has n choices, the second at most n - 2, the third n - 4, etc.
-- Space Complexity: O(n^2) for the chessboard matrix and O(n) for the recursion stack depth.
+      Step 9: Backtracking & Deletion from Row 2
+      - **DELETION / RESET VISUAL:** We clear `board[2][1]` back to `'.'`.
+      - Board State after deletion:
+        Q . . .
+        . . . Q
+        . . . .
+        . . . .
+      - Loop ends for Row 2, return back to Row 1.
 
-=================================================
+   (The backtracking process continues exploring other branches, cleaning up/deleting cells whenever a path fails, until valid configurations are fully discovered and saved!)
+
+================================================================================
+PART 4: TIME & SPACE COMPLEXITY
+================================================================================
+- **Time Complexity: O(N!)**
+  - Why? For the first row, we have $N$ choices. For the second row, roughly $N-2$ choices, then $N-4$, and so on. This factorial growth pattern makes it $O(N!)$.
+- **Space Complexity: O(N^2)**
+  - Why? The chessboard takes $O(N^2)$ space to store characters, and the recursion call stack takes $O(N)$ depth since we go down row by row up to height $N$.
+
+================================================================================
+PART 5: MOST PROBABLE INTERVIEW QUESTIONS
+================================================================================
+1. **Q: Why don't we need to check rows below the current row in `isSafe`?**
+   - **Answer:** Because we place queens row by row starting from row 0 downward. Rows below the current row are completely empty (`'.'`), so they cannot contain any conflicting queens yet.
+2. **Q: Can we optimize the `isSafe` column and diagonal checks from O(N) down to O(1)?**
+   - **Answer:** Yes! We can use hash sets or boolean tracking arrays (`cols`, `leftDiagonals`, `rightDiagonals`) to check attacks in constant time $O(1)$ instead of scanning the board matrix with loops.
+3. **Q: What is the purpose of `board[row][j] = '.'` after the recursive call?**
+   - **Answer:** That is our backtracking step. It acts as a cleanup deletion, resetting the cell back to empty so that when the loop moves to the next column option, the board is clean and unbiased.
 */
