@@ -211,8 +211,8 @@ STEP 1: Outer call mergeSort(nums, low=0, high=3)
   Visual state of nums:
     Index:   0    1    2    3
     nums:  [ 5,   2,   3,   1 ]
-             ^         ^
-            low       mid (high=3)
+             ^    ^         ^
+            low  mid       high
 
 --------------------------------------------------------------------------------
 STEP 2: Left call mergeSort(nums, low=0, high=1)
@@ -224,7 +224,8 @@ STEP 2: Left call mergeSort(nums, low=0, high=1)
   Visual state of nums:
     Index:   0    1    2    3
     nums:  [ 5,   2,   3,   1 ]
-            low/mid high
+            low/         high
+            mid
 
 --------------------------------------------------------------------------------
 STEP 3: Base case mergeSort(nums, low=0, high=0)
@@ -270,6 +271,13 @@ STEP 6: Right half of main call -> mergeSort(nums, low=2, high=3)
   - Tested: Is `low >= high`? `2 >= 3` -> false.
   - Added / computed: `mid = 2 + (3 - 2) / 2 = 2`.
   - Action: Recurse on `[2..2]`, then `[3..3]`.
+
+  Visual state of nums:
+    Index:   0    1    2    3
+    nums:  [ 2,   5,   3,   1 ]
+                       ^    ^
+                    low/high
+                     mid
 
 --------------------------------------------------------------------------------
 STEP 7: Base cases mergeSort(2, 2) and mergeSort(3, 3)
