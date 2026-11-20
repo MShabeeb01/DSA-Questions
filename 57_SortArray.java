@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 class Solution {
     private void merge(int[] nums, int low, int mid, int high, int[] temp) {
         int left = low; // Pointer for the start of the left sorted half
@@ -44,22 +42,6 @@ class Solution {
         mergeSort(nums, 0, nums.length - 1, temp); // Sort entire array in place
         return nums;
     }
-
-    public static void main(String[] args) {
-        Solution sol = new Solution();
-
-        int[] test1 = {5, 2, 3, 1};
-        System.out.println("Test 1: " + Arrays.toString(sol.sortArray(test1)));
-
-        int[] test2 = {5, 1, 1, 2, 0, 0};
-        System.out.println("Test 2: " + Arrays.toString(sol.sortArray(test2)));
-
-        int[] test3 = {42};
-        System.out.println("Test 3: " + Arrays.toString(sol.sortArray(test3)));
-
-        int[] test4 = {};
-        System.out.println("Test 4: " + Arrays.toString(sol.sortArray(test4)));
-    }
 }
 
 /*
@@ -85,16 +67,10 @@ algorithm:
 LINE-BY-LINE EXPLANATION
 -----------------------
 
-Line: import java.util.Arrays;
-What it does:
-  - Imports Java's `Arrays` utility class so we can easily print arrays with
-    `Arrays.toString(...)` inside our `main` test method.
-
---------------------------------------------------------------------------------
-
 Line: class Solution {
 What it does:
-  - Declares the `Solution` class that holds our sorting logic and test runner.
+  - Declares the `Solution` class that holds our LeetCode sorting method and
+    private helper methods.
 
 --------------------------------------------------------------------------------
 
@@ -203,16 +179,9 @@ Line: public int[] sortArray(int[] nums) {
           return nums;
       }
 What it does:
-  - Main public entry point: allocates a single `temp` array of size
+  - Main LeetCode entry point: allocates a single `temp` array of size
     `nums.length`, kicks off `mergeSort` on the full range `0` to `nums.length - 1`,
     and returns the sorted `nums` array.
-
---------------------------------------------------------------------------------
-
-Line: public static void main(String[] args) { ... }
-What it does:
-  - Runs four sample test cases (unsorted array, array with duplicates, single-
-    element array, and empty array) and prints each result to the console.
 
 
 ================================================================================
