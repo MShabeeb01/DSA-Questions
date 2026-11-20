@@ -224,102 +224,123 @@ What it does:
 PART 3: STEP-BY-STEP ITERATION WITH VISUAL REPRESENTATION
 ================================================================================
 
-Let's trace a focused mini-example on a small board slice (showing how `helper`
-handles pre-filled cells, tries digits, hits a conflict, and backtracks).
+Let's trace on a concrete **3x3 matrix** (using the same row/col/box logic,
+with a 3x3 box of size 3 so we can see the full 3x3 grid every step!).
 
-Suppose we are at row 0, with two empty cells `(0, 0)` and `(0, 1)`, and
-`(0, 2)` already holds `'2'`:
+Suppose our 3x3 grid starts as:
 
-  Initial slice (row 0, cols 0..2):
-    col:    0    1    2
-    val:  [ '.', '.', '2' ]
+  Initial 3x3 Grid:
+        c0   c1   c2
+    r0 [ '5', '.', '3' ]
+    r1 [ '.', '5', '.' ]
+    r2 [ '3', '.', '.' ]
 
-Also assume `'1'` is already present elsewhere in col 0 or its 3x3 box, while
-`'2'` is already in row 0 at col 2.
-
---------------------------------------------------------------------------------
-STEP 1: Call helper(board, row=0, col=0)
---------------------------------------------------------------------------------
-  - Tested: `row == 9`? `0 == 9` -> false.
-  - Computed next cell: `nextRow = 0, nextCol = 1`.
-  - Tested: `board[0][0] != '.'`? `'.' != '.'` -> false (cell is empty).
-  - Loop starts: `dig = '1'`.
-  - Tested: `isSafe(board, 0, 0, '1')` -> suppose false (conflict with `'1'`).
-  - Next digit: `dig = '2'`.
-  - Tested: `isSafe(board, 0, 0, '2')` -> false (`'2'` is already at `(0, 2)`).
-  - Next digit: `dig = '3'`.
-  - Tested: `isSafe(board, 0, 0, '3')` -> true!
-  - ADDED (DO): Place `'3'` at `board[0][0]`.
-
-  Visual board slice after adding `'3'` at `(0, 0)`:
-    col:    0    1    2
-    val:  [ '3', '.', '2' ]
-             ^^^
-            added
+Let's trace trying digits `'1'` to `'5'` into the empty cells (`'.'`) in
+row-major order: `(0,1) -> (1,0) -> (1,2) -> (2,1) -> (2,2)`.
 
 --------------------------------------------------------------------------------
-STEP 2: Recurse -> helper(board, row=0, col=1)
+STEP 1: At (0, 1) — Testing & Adding
 --------------------------------------------------------------------------------
-  - Tested: `board[0][1] != '.'`? `'.' != '.'` -> false (cell is empty).
-  - Suppose `'1'` and `'2'` fail `isSafe`, and `'3'` fails `isSafe` because `'3'`
-    is now at `(0, 0)` (same row!).
-  - Suppose `'4'` is ALSO blocked later down the chain, and all remaining digits
-    `'5'`..`'9'` return `false` from deeper recursion (a dead end!).
+  - Cell `(0, 1)` is `'.'`.
+  - Tested `'1'`: `isSafe` -> true.
+  - ADDED (DO): `board[0][1] = '1'`.
 
-  Visual board slice while exploring `(0, 1)`:
-    col:    0    1    2
-    val:  [ '3', '.', '2' ]
-                  ^^^
-                testing
+  3x3 Grid after adding '1' at (0, 1):
+        c0    c1    c2
+    r0 [ '5', ('1'), '3' ]   <-- added '1' at (0, 1)
+    r1 [ '.',  '5',  '.' ]
+    r2 [ '3',  '.',  '.' ]
 
 --------------------------------------------------------------------------------
-STEP 3: Dead end at `(0, 1)` -> Backtrack (DELETE / UNDO) at `(0, 0)`
+STEP 2: Recurse to (1, 0) — Testing & Adding
 --------------------------------------------------------------------------------
-  - `helper(board, 0, 1)` returns `false` to `helper(board, 0, 0)`.
-  - `dig = '3'` at `(0, 0)` did not lead to a valid solution.
-  - DELETED (UNDO): Overwrite `board[0][0]` from `'3'` back to `'.'`.
+  - Cell `(1, 0)` is `'.'`.
+  - Tested `'1'`: `isSafe` -> false (`'1'` already in col 1, and `'1'` is at `(0,1)`).
+  - Tested `'2'`: `isSafe` -> true.
+  - ADDED (DO): `board[1][0] = '2'`.
 
-  How deletion happens here:
-    We are mutating a 2D `char[][]` array in place at index `(0, 0)`—not
-    popping from a stack or removing from a list front/back. We literally
-    replace `'3'` with `'.'` at `(0, 0)`:
-
-    Before delete: [ '3', '.', '2' ]
-                        ^
-                   (0, 0) = '3'
-
-    Delete `'3'` at (0, 0) -> set back to '.'
-
-    After delete:  [ '.', '.', '2' ]
-                        ^
-                   (0, 0) = '.' (restored to empty)
+  3x3 Grid after adding '2' at (1, 0):
+        c0    c1    c2
+    r0 [ '5',  '1',  '3' ]
+    r1 [('2'), '5',  '.' ]   <-- added '2' at (1, 0)
+    r2 [ '3',  '.',  '.' ]
 
 --------------------------------------------------------------------------------
-STEP 4: Continue loop at `(0, 0)` with next digit (`dig = '4'`)
+STEP 3: Recurse to (1, 1) — Pre-filled cell -> Skip
 --------------------------------------------------------------------------------
-  - Tested: `isSafe(board, 0, 0, '4')` -> true!
-  - ADDED (DO): Place `'4'` at `board[0][0]`.
+  - Cell `(1, 1)` is `'5'` (`board[1][1] != '.'`).
+  - Action: Skips and moves to `(1, 2)`.
 
-  Visual board slice after adding `'4'` at `(0, 0)`:
-    col:    0    1    2
-    val:  [ '4', '.', '2' ]
-             ^^^
-            added
+  3x3 Grid (unchanged):
+        c0    c1    c2
+    r0 [ '5',  '1',  '3' ]
+    r1 [ '2', ['5'], '.' ]   <-- pre-filled '5', skipped
+    r2 [ '3',  '.',  '.' ]
 
 --------------------------------------------------------------------------------
-STEP 5: Recurse to `(0, 1)` -> place valid digit (say `'1'`) -> reach `(0, 2)`
+STEP 4: At (1, 2) — Testing & Adding
 --------------------------------------------------------------------------------
-  - At `(0, 1)`, `'1'` is safe and added:
-      col:    0    1    2
-      val:  [ '4', '1', '2' ]
-                    ^^^
-                   added
-  - Next call is `helper(board, 0, 2)`:
-      - Tested: `board[0][2] != '.'`? `'2' != '.'` -> true!
-      - Skips modifying `(0, 2)` and immediately calls `helper(board, 0, 3)` (or
-        next row).
-      - Once all 9 rows finish without conflict, `row == 9` returns `true`,
-        unwinding every recursive frame while keeping all placed digits intact.
+  - Cell `(1, 2)` is `'.'`.
+  - Suppose `'1'`, `'2'`, `'3'` fail `isSafe` (conflicts in row 1 / col 2 / 3x3).
+  - Tested `'4'`: `isSafe` -> true.
+  - ADDED (DO): `board[1][2] = '4'`.
+
+  3x3 Grid after adding '4' at (1, 2):
+        c0    c1    c2
+    r0 [ '5',  '1',  '3' ]
+    r1 [ '2',  '5', ('4') ]  <-- added '4' at (1, 2)
+    r2 [ '3',  '.',  '.' ]
+
+--------------------------------------------------------------------------------
+STEP 5: Recurse to (2, 1) — Dead End -> Trigger Backtrack (DELETE / UNDO)
+--------------------------------------------------------------------------------
+  - At `(2, 1)`, suppose every digit `'1'`..`'5'` fails `isSafe` (blocked by
+    row 2 having `'3'`, col 1 having `'1'` and `'5'`, or grid conflicts).
+  - `(2, 1)` returns `false` back to `(1, 2)`.
+  - At `(1, 2)`, no other digit after `'4'` works, so `(1, 2)` returns `false`
+    back to `(1, 0)`.
+  - At `(1, 0)`, no other digit after `'2'` works, so `(1, 0)` returns `false`
+    back to `(0, 1)`.
+
+  Now we are back at `(0, 1)` where `'1'` was placed in Step 1:
+  - DELETED (UNDO): `board[0][1]` is reset from `'1'` back to `'.'`.
+
+  Visualizing the in-place deletion at (0, 1) in the 3x3 matrix:
+
+    BEFORE DELETING at (0, 1):
+          c0    c1    c2
+      r0 [ '5', <'1'>, '3' ]   <-- '1' currently at (0, 1)
+      r1 [ '2',  '5',  '4'  ]
+      r2 [ '3',  '.',  '.'  ]
+
+    ACTION: Overwrite board[0][1] = '.' (in-place cell reset, not list pop)
+
+    AFTER DELETING at (0, 1):
+          c0    c1    c2
+      r0 [ '5', <'.'>, '3' ]   <-- '1' deleted, cell restored to '.'
+      r1 [ '2',  '5',  '4'  ]
+      r2 [ '3',  '.',  '.'  ]
+
+--------------------------------------------------------------------------------
+STEP 6: Try Next Digit at (0, 1) — Testing & Adding
+--------------------------------------------------------------------------------
+  - Loop at `(0, 1)` continues after `'1'`.
+  - Suppose `'2'` is tested -> `isSafe` is true!
+  - ADDED (DO): `board[0][1] = '2'`.
+
+  3x3 Grid after adding '2' at (0, 1):
+        c0    c1    c2
+    r0 [ '5', ('2'), '3' ]   <-- added '2' at (0, 1)
+    r1 [ '2',  '5',  '4'  ]
+    r2 [ '3',  '.',  '.'  ]
+
+--------------------------------------------------------------------------------
+STEP 7: Continue Forward Until Solved
+--------------------------------------------------------------------------------
+  - From `(0, 1) = '2'`, recursion moves forward to fill `(1, 0)`, `(1, 2)`,
+    `(2, 1)`, and `(2, 2)` with valid non-clashing digits, and once all rows
+    are finished (`row == 9` in full 9x9 Sudoku), returns `true` and keeps
+    the completed grid.
 
 
 ================================================================================
