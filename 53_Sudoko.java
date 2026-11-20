@@ -1,148 +1,379 @@
 class Solution { // LeetCode 37: Sudoku Solver
 
-    // Helper method to validate if 'dig' can be placed at board[row][col]
-    public boolean isSafe(char[][] board, int row, int col, char dig) {
-        // 1. Check Row & Column
-        for (int i = 0; i < 9; i++) {
-            if (board[row][i] == dig || board[i][col] == dig) {
+    public boolean isSafe(char[][] board, int row, int col, char dig) { // Check if digit is valid here
+        for (int i = 0; i < 9; i++) { // Check entire row and entire column
+            if (board[row][i] == dig || board[i][col] == dig) { // Duplicate found in row or col
                 return false;
             }
         }
 
-        // 2. Check 3x3 Grid Box
-        int startRow = (row / 3) * 3;
-        int startCol = (col / 3) * 3;
-        for (int i = startRow; i < startRow + 3; i++) {
-            for (int j = startCol; j < startCol + 3; j++) {
-                if (board[i][j] == dig) {
+        int startRow = (row / 3) * 3; // Top row index of the 3x3 box
+        int startCol = (col / 3) * 3; // Left col index of the 3x3 box
+
+        for (int i = startRow; i < startRow + 3; i++) { // Scan 3 rows of the box
+            for (int j = startCol; j < startCol + 3; j++) { // Scan 3 cols of the box
+                if (board[i][j] == dig) { // Duplicate found in 3x3 box
                     return false;
                 }
             }
         }
 
-        return true;
+        return true; // Safe to place dig at (row, col)
     }
 
-    // Recursive backtracking solver
-    public boolean helper(char[][] board, int row, int col) {
-        // Base Case: Reached beyond last row -> Sudoku completely solved
-        if (row == 9) {
+    public boolean helper(char[][] board, int row, int col) { // Backtracking solver from (row, col)
+        if (row == 9) { // Passed row 8 -> all 81 cells are filled validly
             return true;
         }
 
-        // Calculate next cell coordinates
-        int nextRow = row, nextCol = col + 1;
-        if (nextCol == 9) {
+        int nextRow = row, nextCol = col + 1; // Move one column to the right
+        if (nextCol == 9) { // Wrapped past last column -> move to start of next row
             nextRow = row + 1;
             nextCol = 0;
         }
 
-        // If current cell already contains a number, skip to next cell
-        if (board[row][col] != '.') {
+        if (board[row][col] != '.') { // Pre-filled cell -> skip without changing it
             return helper(board, nextRow, nextCol);
         }
 
-        // Place the digit: Try placing numbers from '1' to '9'
-        for (char dig = '1'; dig <= '9'; dig++) {
-            if (isSafe(board, row, col, dig)) {
-                board[row][col] = dig; // 1. DO: Place digit
+        for (char dig = '1'; dig <= '9'; dig++) { // Try digits '1' through '9'
+            if (isSafe(board, row, col, dig)) { // Only try if rules aren't broken
+                board[row][col] = dig; // DO: place digit on board
 
-                if (helper(board, nextRow, nextCol)) { // 2. RECURSE: Move to next cell
-                    return true; // Found valid complete solution
+                if (helper(board, nextRow, nextCol)) { // RECURSE: solve remaining board
+                    return true; // Propagate success all the way up
                 }
 
-                board[row][col] = '.'; // 3. UNDO (Backtrack): Reset cell
+                board[row][col] = '.'; // UNDO (backtrack): erase digit back to '.'
             }
         }
 
-        return false; // Trigger backtracking to previous cell if no digit works
+        return false; // No digit '1'..'9' worked -> backtrack to earlier cell
     }
 
-    public void solveSudoku(char[][] board) {
-        helper(board, 0, 0); // Start solving from top-left cell (0, 0)
-    }
-
-    public static void main(String[] args) { // Driver function
-        Solution solver = new Solution();
-        char[][] board = {
-            {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
-            {'6', '.', '.', '1', '9', '5', '.', '.', '.'},
-            {'.', '9', '8', '.', '.', '.', '.', '6', '.'},
-            {'8', '.', '.', '.', '6', '.', '.', '.', '3'},
-            {'4', '.', '.', '8', '.', '3', '.', '.', '1'},
-            {'7', '.', '.', '.', '2', '.', '.', '.', '6'},
-            {'.', '6', '.', '.', '.', '.', '2', '8', '.'},
-            {'.', '.', '.', '4', '1', '9', '.', '.', '5'},
-            {'.', '.', '.', '.', '8', '.', '.', '7', '9'}
-        };
-
-        solver.solveSudoku(board);
-
-        // Print Solved Sudoku
-        System.out.println("Solved Sudoku:");
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                System.out.print(board[i][j] + " ");
-            }
-            System.out.println();
-        }
+    public void solveSudoku(char[][] board) { // LeetCode entry point
+        helper(board, 0, 0); // Begin at top-left cell (0, 0)
     }
 }
 
 /*
-==================== SUMMARY ====================
+================================================================================
+PART 2: SUMMARY OF THE APPROACH & LINE-BY-LINE EXPLANATION
+================================================================================
 
-Approach:
-1. Advance cell-by-cell in row-major order:
-   - `nextRow = row`, `nextCol = col + 1`.
-   - If `nextCol == 9`, wrap to next line: `nextRow = row + 1`, `nextCol = 0`.
-2. Base Condition:
-   - When `row == 9`, all rows 0-8 are correctly filled, return `true`.
-3. If current cell is already filled (`board[row][col] != '.'`), immediately call `helper(board, nextRow, nextCol)`.
-4. If empty (`'.'`), try placing digits `'1'` through `'9'`:
-   - Verify safety using `isSafe(board, row, col, dig)` checking row, column, and 3x3 subgrid.
-   - If valid, assign `board[row][col] = dig` and recurse.
-   - If recursive branch returns `true`, propagate `true` up the stack.
-   - If all digits 1-9 fail, backtrack by resetting cell to `'.'`.
+SUMMARY OF THE APPROACH
+-----------------------
+This code solves Sudoku using **recursion + backtracking** (trial-and-error
+with an "undo" step):
 
--------------------------------------------------
+1. **Move Cell by Cell:** Start at `(0, 0)` and walk across each row from left
+   to right, then down to the next row.
+2. **Skip Given Numbers:** If a cell already has a digit (`'1'`–`'9'`), leave it
+   alone and jump straight to the next cell.
+3. **Try, Recurse, Undo:** For an empty cell `'.'`, test digits `'1'` to `'9'`.
+   If a digit doesn't clash with the row, column, or 3x3 box, place it
+   (**DO**) and solve the rest of the board (**RECURSE**). If a dead end happens
+   later, erase the digit back to `'.'` (**UNDO / backtrack**) and try the next
+   digit.
 
-Recursion & Backtracking Tree Breakdown
 
-Initial cell (row, col)
-                   (row, col)
-                 /     |     \
-              '1'     '2'    ... '9'
-              /        \
-          Safe?        Safe?
-         / (Yes)         \ (No -> Prune)
-    (nextRow, nextCol)
-       /          \
-     ...         ...
-   row == 9 ? -> TRUE (Complete Solution)
+LINE-BY-LINE EXPLANATION
+-----------------------
 
--------------------------------------------------
+Line: class Solution { // LeetCode 37: Sudoku Solver
+What it does:
+  - Declares the `Solution` class containing the Sudoku solver methods.
 
-Step-by-Step Backtracking Trace (Excerpt)
+--------------------------------------------------------------------------------
 
-Target cell: board[0][2] (Empty '.')
+Line: public boolean isSafe(char[][] board, int row, int col, char dig) {
+What it does:
+  - Helper method that checks whether placing character `dig` at `(row, col)`
+    follows all three Sudoku rules: no duplicate in `row`, no duplicate in
+    `col`, and no duplicate in the 3x3 box containing `(row, col)`.
 
--------------------------------------------------------------------------------------------------------------------
-Step | Current Cell | Try Digit | Safe Check                       | Result / Action Taken
--------------------------------------------------------------------------------------------------------------------
-1    | (0, 0)       | '5'       | Pre-filled                       | Skip -> go to (0, 1)
-2    | (0, 1)       | '3'       | Pre-filled                       | Skip -> go to (0, 2)
-3    | (0, 2)       | '1'       | '1' present in column 3 / block  | False -> skip
-4    | (0, 2)       | '2'       | Row, col & 3x3 block check       | True -> board[0][2] = '2', Recurse to (0, 3)
-5    | (0, 3)       | '1'       | Check row, col, 3x3 block        | True -> board[0][3] = '1', Recurse to (0, 4)
-...  | ...          | ...       | Dead end reached at deeper cell  | False -> Backtracks
-k    | (0, 2)       | '2'       | Undone                           | board[0][2] = '.', Try next digit '3'
-k+1  | (0, 2)       | '4'       | Check row, col, 3x3 block        | True -> board[0][2] = '4', Continue path...
--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-Complexity:
-- Time Complexity : O(9^(empty_cells)) in the worst case; highly pruned in practice by validity constraints.
-- Space Complexity: O(1) auxiliary board space (done in-place) + O(81) = O(1) recursion call stack depth.
+Line: for (int i = 0; i < 9; i++) {
+          if (board[row][i] == dig || board[i][col] == dig) {
+              return false;
+          }
+      }
+What it does:
+  - Loops `i` from `0` to `8` to check every cell in `board[row][i]` (same
+    row) and every cell in `board[i][col]` (same column).
+  - If `dig` already appears in either place, returns `false` right away.
 
-=================================================
-*/
+--------------------------------------------------------------------------------
+
+Line: int startRow = (row / 3) * 3;
+      int startCol = (col / 3) * 3;
+What it does:
+  - Finds the top-left corner index `(startRow, startCol)` of the 3x3 box that
+    holds `(row, col)`.
+  - Because `row / 3` uses integer division, rows `0, 1, 2` give `0`, rows
+    `3, 4, 5` give `3`, and rows `6, 7, 8` give `6` (same for columns).
+
+--------------------------------------------------------------------------------
+
+Line: for (int i = startRow; i < startRow + 3; i++) {
+          for (int j = startCol; j < startCol + 3; j++) {
+              if (board[i][j] == dig) {
+                  return false;
+              }
+          }
+      }
+What it does:
+  - Scans all 9 cells inside that 3x3 subgrid (`startRow` to `startRow + 2`,
+    and `startCol` to `startCol + 2`).
+  - Returns `false` if `dig` is already present inside that 3x3 box.
+
+--------------------------------------------------------------------------------
+
+Line: return true;
+What it does:
+  - Reached only if `dig` passed the row check, column check, and 3x3 box check—
+    meaning it is valid to place at `(row, col)`.
+
+--------------------------------------------------------------------------------
+
+Line: public boolean helper(char[][] board, int row, int col) {
+What it does:
+  - Recursive backtracking function that tries to fill `(row, col)` and every
+    cell after it. Returns `true` if a full valid solution is found, or
+    `false` if this path hits a dead end.
+
+--------------------------------------------------------------------------------
+
+Line: if (row == 9) {
+          return true;
+      }
+What it does:
+  - **Base case:** Once all rows `0` through `8` are completed, `nextRow`
+    becomes `9`. That means every cell on the 9x9 board is filled validly, so
+    we return `true`.
+
+--------------------------------------------------------------------------------
+
+Line: int nextRow = row, nextCol = col + 1;
+      if (nextCol == 9) {
+          nextRow = row + 1;
+          nextCol = 0;
+      }
+What it does:
+  - Computes the coordinates of the very next cell in row-major order:
+    * Normally moves right (`col + 1`) on the same `row`.
+    * If `col + 1` hits `9` (past index `8`), wraps to column `0` of the next
+      row (`row + 1`).
+
+--------------------------------------------------------------------------------
+
+Line: if (board[row][col] != '.') {
+          return helper(board, nextRow, nextCol);
+      }
+What it does:
+  - If `board[row][col]` is not `'.'`, the cell already has a fixed number, so
+    we don't overwrite it—we just move directly to `(nextRow, nextCol)`.
+
+--------------------------------------------------------------------------------
+
+Line: for (char dig = '1'; dig <= '9'; dig++) {
+What it does:
+  - Loops through candidate digits `'1'` to `'9'` to test in an empty `'.'`
+    cell.
+
+--------------------------------------------------------------------------------
+
+Line: if (isSafe(board, row, col, dig)) {
+          board[row][col] = dig; // 1. DO: Place digit
+
+          if (helper(board, nextRow, nextCol)) { // 2. RECURSE: Move to next cell
+              return true; // Found valid complete solution
+          }
+
+          board[row][col] = '.'; // 3. UNDO (Backtrack): Reset cell
+      }
+What it does:
+  - **Check:** Calls `isSafe(...)` before touching the board.
+  - **DO:** Writes `dig` into `board[row][col]`.
+  - **RECURSE:** Calls `helper(board, nextRow, nextCol)` to solve the rest of
+    the board. If that returns `true`, immediately returns `true` so we keep
+    the solved board intact.
+  - **UNDO (Backtrack):** If the recursive call returns `false` (meaning `dig`
+    led to a dead end later), sets `board[row][col]` back to `'.'` so the loop
+    can try the next digit cleanly.
+
+--------------------------------------------------------------------------------
+
+Line: return false;
+What it does:
+  - Reached if none of `'1'` through `'9'` worked at `(row, col)`. Returns
+    `false` to tell the previous cell to backtrack and try a different digit.
+
+--------------------------------------------------------------------------------
+
+Line: public void solveSudoku(char[][] board) {
+          helper(board, 0, 0); // Start solving from top-left cell (0, 0)
+      }
+What it does:
+  - Main LeetCode method that kicks off backtracking at top-left `(0, 0)` and
+    mutates `board` directly in place.
+
+
+================================================================================
+PART 3: STEP-BY-STEP ITERATION WITH VISUAL REPRESENTATION
+================================================================================
+
+Let's trace a focused mini-example on a small board slice (showing how `helper`
+handles pre-filled cells, tries digits, hits a conflict, and backtracks).
+
+Suppose we are at row 0, with two empty cells `(0, 0)` and `(0, 1)`, and
+`(0, 2)` already holds `'2'`:
+
+  Initial slice (row 0, cols 0..2):
+    col:    0    1    2
+    val:  [ '.', '.', '2' ]
+
+Also assume `'1'` is already present elsewhere in col 0 or its 3x3 box, while
+`'2'` is already in row 0 at col 2.
+
+--------------------------------------------------------------------------------
+STEP 1: Call helper(board, row=0, col=0)
+--------------------------------------------------------------------------------
+  - Tested: `row == 9`? `0 == 9` -> false.
+  - Computed next cell: `nextRow = 0, nextCol = 1`.
+  - Tested: `board[0][0] != '.'`? `'.' != '.'` -> false (cell is empty).
+  - Loop starts: `dig = '1'`.
+  - Tested: `isSafe(board, 0, 0, '1')` -> suppose false (conflict with `'1'`).
+  - Next digit: `dig = '2'`.
+  - Tested: `isSafe(board, 0, 0, '2')` -> false (`'2'` is already at `(0, 2)`).
+  - Next digit: `dig = '3'`.
+  - Tested: `isSafe(board, 0, 0, '3')` -> true!
+  - ADDED (DO): Place `'3'` at `board[0][0]`.
+
+  Visual board slice after adding `'3'` at `(0, 0)`:
+    col:    0    1    2
+    val:  [ '3', '.', '2' ]
+             ^^^
+            added
+
+--------------------------------------------------------------------------------
+STEP 2: Recurse -> helper(board, row=0, col=1)
+--------------------------------------------------------------------------------
+  - Tested: `board[0][1] != '.'`? `'.' != '.'` -> false (cell is empty).
+  - Suppose `'1'` and `'2'` fail `isSafe`, and `'3'` fails `isSafe` because `'3'`
+    is now at `(0, 0)` (same row!).
+  - Suppose `'4'` is ALSO blocked later down the chain, and all remaining digits
+    `'5'`..`'9'` return `false` from deeper recursion (a dead end!).
+
+  Visual board slice while exploring `(0, 1)`:
+    col:    0    1    2
+    val:  [ '3', '.', '2' ]
+                  ^^^
+                testing
+
+--------------------------------------------------------------------------------
+STEP 3: Dead end at `(0, 1)` -> Backtrack (DELETE / UNDO) at `(0, 0)`
+--------------------------------------------------------------------------------
+  - `helper(board, 0, 1)` returns `false` to `helper(board, 0, 0)`.
+  - `dig = '3'` at `(0, 0)` did not lead to a valid solution.
+  - DELETED (UNDO): Overwrite `board[0][0]` from `'3'` back to `'.'`.
+
+  How deletion happens here:
+    We are mutating a 2D `char[][]` array in place at index `(0, 0)`—not
+    popping from a stack or removing from a list front/back. We literally
+    replace `'3'` with `'.'` at `(0, 0)`:
+
+    Before delete: [ '3', '.', '2' ]
+                        ^
+                   (0, 0) = '3'
+
+    Delete `'3'` at (0, 0) -> set back to '.'
+
+    After delete:  [ '.', '.', '2' ]
+                        ^
+                   (0, 0) = '.' (restored to empty)
+
+--------------------------------------------------------------------------------
+STEP 4: Continue loop at `(0, 0)` with next digit (`dig = '4'`)
+--------------------------------------------------------------------------------
+  - Tested: `isSafe(board, 0, 0, '4')` -> true!
+  - ADDED (DO): Place `'4'` at `board[0][0]`.
+
+  Visual board slice after adding `'4'` at `(0, 0)`:
+    col:    0    1    2
+    val:  [ '4', '.', '2' ]
+             ^^^
+            added
+
+--------------------------------------------------------------------------------
+STEP 5: Recurse to `(0, 1)` -> place valid digit (say `'1'`) -> reach `(0, 2)`
+--------------------------------------------------------------------------------
+  - At `(0, 1)`, `'1'` is safe and added:
+      col:    0    1    2
+      val:  [ '4', '1', '2' ]
+                    ^^^
+                   added
+  - Next call is `helper(board, 0, 2)`:
+      - Tested: `board[0][2] != '.'`? `'2' != '.'` -> true!
+      - Skips modifying `(0, 2)` and immediately calls `helper(board, 0, 3)` (or
+        next row).
+      - Once all 9 rows finish without conflict, `row == 9` returns `true`,
+        unwinding every recursive frame while keeping all placed digits intact.
+
+
+================================================================================
+PART 4: TIME & SPACE COMPLEXITY
+================================================================================
+
+Let:
+  - `m` be the number of empty cells (`'.'`) on the `9 x 9` board (at most `81`).
+  - `9` be the number of digits (`'1'` to `'9'`) we try per empty cell.
+
+TIME COMPLEXITY: O(9^m)  (bounded by O(9^81) in the worst case)
+----------------------------------------------------------------
+- **Why `9^m`:** In the worst case, each of the `m` empty cells has up to `9`
+  digit choices before backtracking, forming a branching tree of up to `9^m`
+  states.
+- **Why `isSafe` is constant time:** Checking 9 cells in the row, 9 in the
+  column, and 9 in the 3x3 box is a fixed small number of steps (`O(1)`).
+- In practice, pruning invalid branches via `isSafe` makes valid Sudoku puzzles
+  solve much faster than the worst-case bound.
+
+SPACE COMPLEXITY: O(m)  (at most O(81) = O(1) for a fixed 9x9 board)
+-------------------------------------------------------------------
+- **Why `O(m)`:** The recursion call stack goes at most one level deep per empty
+  cell (`m` levels, at most `81` calls deep).
+- Because the board size is always fixed at `9 x 9` (`m <= 81`), `O(m)` is
+  also bounded by a constant `O(81)` (often written as `O(1)` when treating
+  the `9 x 9` grid as fixed size, or `O(m)` in terms of empty cells).
+
+
+================================================================================
+PART 5: MOST PROBABLE INTERVIEW QUESTIONS
+================================================================================
+
+Q1: How do you compute the starting index of the 3x3 box for `(row, col)`?
+--------------------------------------------------------------------------------
+Spoken Answer:
+  "I use `startRow = (row / 3) * 3` and `startCol = (col / 3) * 3`. Integer
+  division by `3` groups indices `0..2`, `3..5`, and `6..8` into box `0`, `1`,
+  or `2`, and multiplying by `3` gives the exact top-left row or column of that
+  3x3 box."
+
+Q2: Why do we reset `board[row][col] = '.'` when `helper` returns `false`?
+--------------------------------------------------------------------------------
+Spoken Answer:
+  "Because we modify `board` in place to save memory. If a chosen digit leads
+  to a dead end later, we must erase it back to `'.'` before trying the next
+  digit or returning `false`—otherwise a leftover invalid digit would pollute
+  future checks."
+
+Q3: How could you optimize `isSafe` if an interviewer asks for faster lookups?
+--------------------------------------------------------------------------------
+Spoken Answer:
+  "Right now `isSafe` scans rows, columns, and the 3x3 box on every check. I can
+  keep three boolean arrays (or bitmasks) for `rows[9][9]`, `cols[9][9]`, and
+  `boxes[9][9]` so checking whether a digit is used takes `O(1)` instead of
+  looping over cells, and toggle them during DO and UNDO."
+ */
